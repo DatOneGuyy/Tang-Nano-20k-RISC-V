@@ -1,0 +1,61 @@
+{
+ "Device" : "GW2AR-18C",
+ "Files" : [
+  {
+   "Path" : "E:/FPGA/riscv/src/alu.v",
+   "Type" : "verilog"
+  },
+  {
+   "Path" : "E:/FPGA/riscv/src/control_unit.v",
+   "Type" : "verilog"
+  },
+  {
+   "Path" : "E:/FPGA/riscv/src/debounce_filter.v",
+   "Type" : "verilog"
+  },
+  {
+   "Path" : "E:/FPGA/riscv/src/debugger.v",
+   "Type" : "verilog"
+  },
+  {
+   "Path" : "E:/FPGA/riscv/src/instruction_fetch.v",
+   "Type" : "verilog"
+  },
+  {
+   "Path" : "E:/FPGA/riscv/src/operand_controller.v",
+   "Type" : "verilog"
+  },
+  {
+   "Path" : "E:/FPGA/riscv/src/register_file.v",
+   "Type" : "verilog"
+  },
+  {
+   "Path" : "E:/FPGA/riscv/src/riscv_top.v",
+   "Type" : "verilog"
+  },
+  {
+   "Path" : "E:/FPGA/riscv/src/uart_out.v",
+   "Type" : "verilog"
+  },
+  {
+   "Path" : "E:/FPGA/riscv/src/uart_rx.v",
+   "Type" : "verilog"
+  },
+  {
+   "Path" : "E:/FPGA/riscv/src/uart_top.v",
+   "Type" : "verilog"
+  },
+  {
+   "Path" : "E:/FPGA/riscv/src/uart_tx.v",
+   "Type" : "verilog"
+  }
+ ],
+ "IncludePath" : [
+
+ ],
+ "LoopLimit" : 2000,
+ "ResultFile" : "E:/FPGA/riscv/impl/temp/rtl_parser.result",
+ "Top" : "",
+ "VerilogStd" : "verilog_2001",
+ "VhdlStd" : "vhdl_93"
+}

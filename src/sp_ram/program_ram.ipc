@@ -1,0 +1,17 @@
+[General]
+ipc_version=4
+file=program_ram
+module=program_ram
+target_device=gw2ar18c-000
+type=ram_sp
+version=3.0
+ 
+[Config]
+BYTE_SIZE=0
+DEPTH=16384
+LANG=0
+MEM_FILE=E:/FPGA/riscv/src/programs/program1.mi
+READ=0
+RESET_MODE=true
+WIDTH=32
+WRITE=0

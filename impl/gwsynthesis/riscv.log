@@ -1,0 +1,56 @@
+GowinSynthesis start
+Running parser ...
+Analyzing Verilog file 'E:\FPGA\riscv\src\alu.v'
+Analyzing Verilog file 'E:\FPGA\riscv\src\control_unit.v'
+Analyzing Verilog file 'E:\FPGA\riscv\src\debounce_filter.v'
+Analyzing Verilog file 'E:\FPGA\riscv\src\debugger.v'
+Analyzing Verilog file 'E:\FPGA\riscv\src\instruction_fetch.v'
+Analyzing Verilog file 'E:\FPGA\riscv\src\operand_controller.v'
+Analyzing Verilog file 'E:\FPGA\riscv\src\register_file.v'
+Analyzing Verilog file 'E:\FPGA\riscv\src\riscv_top.v'
+Analyzing Verilog file 'E:\FPGA\riscv\src\uart_out.v'
+Analyzing Verilog file 'E:\FPGA\riscv\src\uart_rx.v'
+Analyzing Verilog file 'E:\FPGA\riscv\src\uart_top.v'
+Analyzing Verilog file 'E:\FPGA\riscv\src\uart_tx.v'
+Compiling module 'riscv_top'("E:\FPGA\riscv\src\riscv_top.v":1)
+Compiling module 'debounce_filter'("E:\FPGA\riscv\src\debounce_filter.v":1)
+Compiling module 'dff'("E:\FPGA\riscv\src\debounce_filter.v":45)
+Compiling module 'debugger'("E:\FPGA\riscv\src\debugger.v":1)
+Compiling module 'uart_test'("E:\FPGA\riscv\src\uart_top.v":1)
+Compiling module 'uart_rx(CLK_FRE=27)'("E:\FPGA\riscv\src\uart_rx.v":1)
+Compiling module 'uart_tx(CLK_FRE=27)'("E:\FPGA\riscv\src\uart_tx.v":1)
+Compiling module 'uart_out'("E:\FPGA\riscv\src\uart_out.v":1)
+Compiling module 'instruction_fetch'("E:\FPGA\riscv\src\instruction_fetch.v":1)
+Extracting RAM for identifier 'mem'("E:\FPGA\riscv\src\instruction_fetch.v":8)
+Compiling module 'register_file'("E:\FPGA\riscv\src\register_file.v":1)
+Compiling module 'alu'("E:\FPGA\riscv\src\alu.v":1)
+Compiling module 'operand_controller'("E:\FPGA\riscv\src\operand_controller.v":1)
+Compiling module 'control_unit'("E:\FPGA\riscv\src\control_unit.v":1)
+NOTE  (EX0101) : Current top module is "riscv_top"
+WARN  (EX0211) : The output port "led0" of module "riscv_top" has no driver, assigning undriven bits to Z, simulation mismatch possible("E:\FPGA\riscv\src\riscv_top.v":7)
+WARN  (EX0211) : The output port "led1" of module "riscv_top" has no driver, assigning undriven bits to Z, simulation mismatch possible("E:\FPGA\riscv\src\riscv_top.v":8)
+WARN  (EX0211) : The output port "ws2812" of module "riscv_top" has no driver, assigning undriven bits to Z, simulation mismatch possible("E:\FPGA\riscv\src\riscv_top.v":9)
+[5%] Running netlist conversion ...
+WARN  (CV0016) : Input uart_rx is unused("E:\FPGA\riscv\src\riscv_top.v":3)
+WARN  (CV0016) : Input button1 is unused("E:\FPGA\riscv\src\riscv_top.v":5)
+Running device independent optimization ...
+[10%] Optimizing Phase 0 completed
+[15%] Optimizing Phase 1 completed
+[25%] Optimizing Phase 2 completed
+Running inference ...
+[30%] Inferring Phase 0 completed
+[40%] Inferring Phase 1 completed
+[50%] Inferring Phase 2 completed
+[55%] Inferring Phase 3 completed
+Running technical mapping ...
+[60%] Tech-Mapping Phase 0 completed
+[65%] Tech-Mapping Phase 1 completed
+[75%] Tech-Mapping Phase 2 completed
+[80%] Tech-Mapping Phase 3 completed
+[90%] Tech-Mapping Phase 4 completed
+WARN  (NL0002) : The module "debounce_filter" instantiated to "button1_f" is swept in optimizing("E:\FPGA\riscv\src\riscv_top.v":39)
+WARN  (NL0002) : The module "dff" instantiated to "button_dff" is swept in optimizing("E:\FPGA\riscv\src\debounce_filter.v":16)
+WARN  (NL0002) : The module "uart_rx" instantiated to "uart_rx_inst" is swept in optimizing("E:\FPGA\riscv\src\uart_top.v":126)
+[95%] Generate netlist file "E:\FPGA\riscv\impl\gwsynthesis\riscv.vg" completed
+[100%] Generate report file "E:\FPGA\riscv\impl\gwsynthesis\riscv_syn.rpt.html" completed
+GowinSynthesis finish

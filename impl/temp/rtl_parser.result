@@ -1,0 +1,132 @@
+[
+ {
+  "InstFile" : "E:/FPGA/riscv/src/riscv_top.v",
+  "InstLine" : 1,
+  "InstName" : "riscv_top",
+  "ModuleFile" : "E:/FPGA/riscv/src/riscv_top.v",
+  "ModuleLine" : 1,
+  "ModuleName" : "riscv_top",
+  "SubInsts" : [
+   {
+    "InstFile" : "E:/FPGA/riscv/src/riscv_top.v",
+    "InstLine" : 38,
+    "InstName" : "button0_f",
+    "ModuleFile" : "E:/FPGA/riscv/src/debounce_filter.v",
+    "ModuleLine" : 1,
+    "ModuleName" : "debounce_filter",
+    "SubInsts" : [
+     {
+      "InstFile" : "E:/FPGA/riscv/src/debounce_filter.v",
+      "InstLine" : 16,
+      "InstName" : "button_dff",
+      "ModuleFile" : "E:/FPGA/riscv/src/debounce_filter.v",
+      "ModuleLine" : 45,
+      "ModuleName" : "dff"
+     }
+    ]
+   },
+   {
+    "InstFile" : "E:/FPGA/riscv/src/riscv_top.v",
+    "InstLine" : 39,
+    "InstName" : "button1_f",
+    "ModuleFile" : "E:/FPGA/riscv/src/debounce_filter.v",
+    "ModuleLine" : 1,
+    "ModuleName" : "debounce_filter",
+    "SubInsts" : [
+     {
+      "InstFile" : "E:/FPGA/riscv/src/debounce_filter.v",
+      "InstLine" : 16,
+      "InstName" : "button_dff",
+      "ModuleFile" : "E:/FPGA/riscv/src/debounce_filter.v",
+      "ModuleLine" : 45,
+      "ModuleName" : "dff"
+     }
+    ]
+   },
+   {
+    "InstFile" : "E:/FPGA/riscv/src/riscv_top.v",
+    "InstLine" : 40,
+    "InstName" : "debug",
+    "ModuleFile" : "E:/FPGA/riscv/src/debugger.v",
+    "ModuleLine" : 1,
+    "ModuleName" : "debugger",
+    "SubInsts" : [
+     {
+      "InstFile" : "E:/FPGA/riscv/src/debugger.v",
+      "InstLine" : 18,
+      "InstName" : "uart",
+      "ModuleFile" : "E:/FPGA/riscv/src/uart_top.v",
+      "ModuleLine" : 1,
+      "ModuleName" : "uart_test",
+      "SubInsts" : [
+       {
+        "InstFile" : "E:/FPGA/riscv/src/uart_top.v",
+        "InstLine" : 118,
+        "InstName" : "uart_rx_inst",
+        "ModuleFile" : "E:/FPGA/riscv/src/uart_rx.v",
+        "ModuleLine" : 1,
+        "ModuleName" : "uart_rx"
+       },
+       {
+        "InstFile" : "E:/FPGA/riscv/src/uart_top.v",
+        "InstLine" : 132,
+        "InstName" : "uart_tx_inst",
+        "ModuleFile" : "E:/FPGA/riscv/src/uart_tx.v",
+        "ModuleLine" : 1,
+        "ModuleName" : "uart_tx"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "InstFile" : "E:/FPGA/riscv/src/riscv_top.v",
+    "InstLine" : 41,
+    "InstName" : "debug_limiter",
+    "ModuleFile" : "E:/FPGA/riscv/src/uart_out.v",
+    "ModuleLine" : 1,
+    "ModuleName" : "uart_out"
+   },
+   {
+    "InstFile" : "E:/FPGA/riscv/src/riscv_top.v",
+    "InstLine" : 43,
+    "InstName" : "instruction_reader",
+    "ModuleFile" : "E:/FPGA/riscv/src/instruction_fetch.v",
+    "ModuleLine" : 1,
+    "ModuleName" : "instruction_fetch"
+   },
+   {
+    "InstFile" : "E:/FPGA/riscv/src/riscv_top.v",
+    "InstLine" : 73,
+    "InstName" : "regs",
+    "ModuleFile" : "E:/FPGA/riscv/src/register_file.v",
+    "ModuleLine" : 1,
+    "ModuleName" : "register_file"
+   },
+   {
+    "InstFile" : "E:/FPGA/riscv/src/riscv_top.v",
+    "InstLine" : 75,
+    "InstName" : "ALU",
+    "ModuleFile" : "E:/FPGA/riscv/src/alu.v",
+    "ModuleLine" : 1,
+    "ModuleName" : "alu"
+   },
+   {
+    "InstFile" : "E:/FPGA/riscv/src/riscv_top.v",
+    "InstLine" : 77,
+    "InstName" : "opcon",
+    "ModuleFile" : "E:/FPGA/riscv/src/operand_controller.v",
+    "ModuleLine" : 1,
+    "ModuleName" : "operand_controller"
+   },
+   {
+    "InstFile" : "E:/FPGA/riscv/src/riscv_top.v",
+    "InstLine" : 79,
+    "InstName" : "controller",
+    "ModuleFile" : "E:/FPGA/riscv/src/control_unit.v",
+    "ModuleLine" : 1,
+    "ModuleName" : "control_unit"
+   }
+  ]
+ }
+]
