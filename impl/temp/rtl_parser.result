@@ -1,5 +1,13 @@
 [
  {
+  "InstFile" : "E:/FPGA/riscv/src/gowin_rpll/gowin_rpll.v",
+  "InstLine" : 10,
+  "InstName" : "Gowin_rPLL",
+  "ModuleFile" : "E:/FPGA/riscv/src/gowin_rpll/gowin_rpll.v",
+  "ModuleLine" : 10,
+  "ModuleName" : "Gowin_rPLL"
+ },
+ {
   "InstFile" : "E:/FPGA/riscv/src/riscv_top.v",
   "InstLine" : 1,
   "InstName" : "riscv_top",
