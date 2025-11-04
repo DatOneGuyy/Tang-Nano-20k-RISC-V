@@ -3,8 +3,9 @@ module debugger(
 	input                        rst,
 	input                        uart_rx,
     input                        debug_send,
-    input [1023:0]               label,
+    input [255:0]                label,
     input [63:0]                 data,
+    input [1023:0]               register_data,
 	output                       uart_tx
 );
 
@@ -22,6 +23,7 @@ uart_test uart(
     .send(filtered_send), 
     .label(label), 
     .data(data), 
+    .register_data(register_data),
     .uart_tx(uart_tx)
 );
 

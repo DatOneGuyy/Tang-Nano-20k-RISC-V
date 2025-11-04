@@ -169,7 +169,7 @@ parser.add_argument("source", help="File name to be parsed")
 parser.add_argument("--hex", help="Write output as hex instead of binary", action="store_true")
 args = parser.parse_args()
 
-source_file = args.source
+source_file = "src/programs/" + args.source
 
 if (".asm" not in source_file):
     source_file = source_file + ".asm"
@@ -182,6 +182,8 @@ try:
     os.remove(destination_file)
 except FileNotFoundError:
     print("No previous binaries removed")
+else:
+    print(f"Removed previous binary {destination_file}")
 finally:
     print("Beginning assembly")
 write_file = open(destination_file, "w")
