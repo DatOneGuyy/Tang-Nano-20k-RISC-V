@@ -18,6 +18,10 @@
    "Type" : "verilog"
   },
   {
+   "Path" : "E:/FPGA/riscv/src/gowin_rpll/gowin_rpll.v",
+   "Type" : "verilog"
+  },
+  {
    "Path" : "E:/FPGA/riscv/src/instruction_fetch.v",
    "Type" : "verilog"
   },
