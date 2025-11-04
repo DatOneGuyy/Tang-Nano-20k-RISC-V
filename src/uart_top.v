@@ -3,19 +3,22 @@ module uart_test(
 	input                        rst,
 	input                        uart_rx,
     input                        send,
-    input [1023:0]               label,
+    input [255:0]                label,
     input [63:0]                 data,
+    input [1023:0]               register_data,
 	output                       uart_tx
 );
 
-parameter                        LABEL_LENGTH = 128;
+parameter                        LABEL_LENGTH = 32;
 parameter                        DATA_LENGTH = 8;
+parameter                        REGISTER_LENGTH = 128;
 parameter                        CLK_FRE  = 27; //Mhz
-parameter                        UART_FRE = 115200; //Mhz
+parameter                        UART_FRE = 115200; //hz
 localparam                       IDLE =  0;
 localparam                       SEND_LABEL =  1; //send 
 localparam                       WAIT =  2; //wait 1 second and send uart received data
 localparam                       SEND_DATA = 3;
+localparam                       SEND_REGISTERS = 4;
 reg [7:0]                        tx_data;
 reg [7:0]                        tx_str;
 reg                              tx_data_valid;
@@ -47,6 +50,21 @@ always @(posedge clk or negedge rst_n) begin
                 if (tx_data_ready) begin
                     state <= WAIT;
                     counter <= 0;
+                end
+            end
+            SEND_REGISTERS: begin
+                tx_data <= tx_str;
+
+                if (tx_data_valid == 1'b1 && tx_data_ready == 1'b1 && tx_cnt < REGISTER_NUM - 1) begin
+                    tx_cnt <= tx_cnt + 8'd1;
+                end
+                else if (tx_data_valid && tx_data_ready) begin
+                    tx_cnt <= 8'd0;
+                    tx_data_valid <= 1'b0;
+                    state <= SEND_LABEL;
+                end
+                else if (~tx_data_valid) begin
+                    tx_data_valid <= 1'b1;
                 end
             end
             SEND_LABEL: begin
@@ -81,7 +99,7 @@ always @(posedge clk or negedge rst_n) begin
             end
             WAIT: begin
                 if (send) begin
-                    state <= SEND_LABEL;
+                    state <= SEND_REGISTERS;
                     counter <= counter + 8'b1;
                 end
             end
@@ -95,13 +113,17 @@ parameter endlabel = 16'h3a20;
 parameter errorlabel = "Invalid transmitter state";
 parameter LABEL_NUM = LABEL_LENGTH + 0;
 parameter DATA_NUM = DATA_LENGTH + 1;
+parameter REGISTER_NUM = REGISTER_LENGTH + 0;
 
 wire [LABEL_NUM * 8 - 1:0] send_label = {label}; // append endlabel to include colon
 wire [DATA_NUM * 8 - 1:0] send_data = {data, endl};
+wire [REGISTER_NUM * 8 - 1:0] send_register = {register_data};
 wire [LABEL_NUM * 8 - 1:0] send_error = {errorlabel, endl};
 
 always @(*) begin
     case (state)
+        SEND_REGISTERS:
+            tx_str <= send_register[(REGISTER_NUM - 1 - tx_cnt) * 8 +: 8];
         SEND_LABEL:
 	        tx_str <= send_label[(LABEL_NUM - 1 - tx_cnt) * 8 +: 8];
         SEND_DATA:
