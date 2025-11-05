@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Module name="riscv_top" Register="124" Alu="52" Lut="142" T_Register="548(124)" T_Alu="119(52)" T_Lut="778(142)">
- <SubModule name="button0_f" Register="18" Lut="46" T_Register="19(18)" T_Lut="46(46)">
+<Module name="riscv_top" Register="125" Alu="54" Lut="179" T_Register="1332(125)" T_Alu="153(54)" T_Lut="2386(179)">
+ <SubModule name="button0_f" Register="18" Lut="40" T_Register="19(18)" T_Lut="40(40)">
   <SubModule name="button_dff" Register="1" T_Register="1(1)"/>
  </SubModule>
- <SubModule name="debug" Register="2" Lut="2" T_Register="53(2)" T_Alu="3(0)" T_Lut="192(2)">
-  <SubModule name="uart" Register="19" Lut="135" T_Register="51(19)" T_Alu="3(0)" T_Lut="190(135)">
-   <SubModule name="uart_tx_inst" Register="32" Alu="3" Lut="55" T_Register="32(32)" T_Alu="3(3)" T_Lut="55(55)"/>
+ <SubModule name="debug" Register="2" Lut="2" T_Register="54(2)" T_Alu="3(0)" T_Lut="1011(2)">
+  <SubModule name="uart" Register="20" Lut="957" T_Register="52(20)" T_Alu="3(0)" T_Lut="1009(957)">
+   <SubModule name="uart_tx_inst" Register="32" Alu="3" Lut="52" T_Register="32(32)" T_Alu="3(3)" T_Lut="52(52)"/>
   </SubModule>
  </SubModule>
- <SubModule name="debug_limiter" Register="21" Lut="40" T_Register="21(21)" T_Lut="40(40)"/>
- <SubModule name="instruction_reader" Register="11" Lut="14" T_Register="11(11)" T_Lut="14(14)"/>
- <SubModule name="regs" Register="320" Lut="273" T_Register="320(320)" T_Lut="273(273)"/>
- <SubModule name="ALU" Alu="64" Lut="32" T_Alu="64(64)" T_Lut="32(32)"/>
- <SubModule name="opcon" Lut="38" T_Lut="38(38)"/>
+ <SubModule name="debug_limiter" Register="21" Lut="37" T_Register="21(21)" T_Lut="37(37)"/>
+ <SubModule name="instruction_reader" Register="25" Lut="46" T_Register="25(25)" T_Lut="46(46)"/>
+ <SubModule name="regs" Register="1088" Lut="921" T_Register="1088(1088)" T_Lut="921(921)"/>
+ <SubModule name="ALU" Alu="96" Lut="98" T_Alu="96(96)" T_Lut="98(98)"/>
+ <SubModule name="opcon" Lut="53" T_Lut="53(53)"/>
  <SubModule name="controller" Lut="1" T_Lut="1(1)"/>
 </Module>

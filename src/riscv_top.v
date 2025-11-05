@@ -14,16 +14,14 @@ localparam FETCH = 1;
 localparam EXEC = 2;
 localparam FREEZE = 3;
 
-localparam CLOCK_REDUCTION = 21;
+localparam CLOCK_REDUCTION = 23;
 
 reg [63:0] counter;
 
 reg [1:0] state;
 
-localparam BLANK_DATA = {8{8'h20}};
-
 wire debug_send;
-reg [1023:0] debug_label;
+reg [255:0] debug_label;
 reg [63:0] debug_data;
 
 reg send_data;
@@ -35,9 +33,11 @@ wire [31:0] instruction;
 reg [31:0] pc;
 reg read_program;
 
+wire [1023:0] registers;
+
 debounce_filter button0_f(.clk(clk), .button(button0), .filtered(button0_filtered));
 debounce_filter button1_f(.clk(clk), .button(button1), .filtered(button1_filtered));
-debugger debug(.clk(clk), .rst(button0), .uart_rx(uart_rx), .debug_send(debug_send), .label(debug_label), .data(debug_data), .uart_tx(uart_tx));
+debugger debug(.clk(clk), .rst(button0), .uart_rx(uart_rx), .debug_send(debug_send), .label(debug_label), .data(debug_data), .register_data(registers), .uart_tx(uart_tx));
 uart_out debug_limiter(.clk(clk), .send_data(send_data), .debug_send(debug_send));
 
 instruction_fetch instruction_reader(.clk(read_program), .pc(pc), .instruction(instruction));
@@ -70,7 +70,9 @@ wire mem_write_en;
 wire jal;
 wire jalr;
 
-register_file regs(.clk(clk), .read1_en(read1_en), .read2_en(read2_en), .write1_en(write1_en), .read1_dest(read1_dest), .read2_dest(read2_dest), .write1_dest(write1_dest), .write_value(write_value), .read_value1(read_value1), .read_value2(read_value2));
+reg regwrite_en;
+
+register_file regs(.clk(clk), .read1_en(read1_en), .read2_en(read2_en), .write1_en(write1_en), .read1_dest(read1_dest), .read2_dest(read2_dest), .write1_dest(write1_dest), .write_value(write_value), .regwrite_en(regwrite_en), .read_value1(read_value1), .read_value2(read_value2), .full_file(registers));
 
 alu ALU(.pc(pc), .op1(operand1), .op2(operand2), .instruction(instruction), .result(alu_result), .jalr(jalr_pc_assignment), .comparison_flag(comparison_flag));
 
@@ -81,6 +83,11 @@ control_unit controller(.instruction(instruction), .read1_en(read1_en), .read2_e
 wire byte_output;
 
 reg [31:0] pc_increment;
+
+assign led0 = 0;
+assign led1 = 0;
+
+wire [6:0] funct7 = instruction[31:25];
 
 always @(posedge clk) begin
     if (counter[CLOCK_REDUCTION:0] == 0) begin
@@ -94,21 +101,21 @@ always @(posedge clk) begin
             FETCH: begin
                 send_data <= 1'b1;
                 read_program <= 1'b1;
-
+                regwrite_en <= 1'b0;
+                
                 debug_label <= "program counter: ";
                 debug_data <= pc;
-                send_data <= 1'b0;
+                send_data <= 1'b1;
 
                 state <= EXEC;
             end
             
             EXEC: begin
                 read_program <= 1'b0;
-                if (pc == 8) begin
-                    debug_label <= "operand 1: ";
-                    debug_data <= operand1;
-                    send_data <= 1'b1;
-                end
+
+                debug_label <= "funct7: ";
+                debug_data <= funct7[5];
+                send_data <= 1'b1;
 
                 if (comparison_flag | jal) begin
                     pc <= pc + jump_immediate;
@@ -120,8 +127,8 @@ always @(posedge clk) begin
                     pc <= pc + 4;
                 end
 
-                write_value <= (reg_write_from_mem ? 0 : alu_result); //replace with memory implementation
-
+                write_value <= (reg_write_from_mem ? 0 : alu_result);
+                regwrite_en <= 1'b1;
                 state <= FETCH;
             end
  
