@@ -14,7 +14,7 @@ localparam FETCH = 1;
 localparam EXEC = 2;
 localparam FREEZE = 3;
 
-localparam CLOCK_REDUCTION = 21;
+localparam CLOCK_REDUCTION = 23;
 
 reg [63:0] counter;
 
@@ -87,6 +87,8 @@ reg [31:0] pc_increment;
 assign led0 = 0;
 assign led1 = 0;
 
+wire [6:0] funct7 = instruction[31:25];
+
 always @(posedge clk) begin
     if (counter[CLOCK_REDUCTION:0] == 0) begin
         counter <= counter + 64'b1;
@@ -111,8 +113,8 @@ always @(posedge clk) begin
             EXEC: begin
                 read_program <= 1'b0;
 
-                debug_label <= "read values: ";
-                debug_data <= {read2_dest};
+                debug_label <= "funct7: ";
+                debug_data <= funct7[5];
                 send_data <= 1'b1;
 
                 if (comparison_flag | jal) begin

@@ -1,5 +1,6 @@
 import argparse
 import os
+import time
 
 r_type = ["add", "sub",  "xor", "or", "and", "sll", "srl", "sra", "slt", "sltu"]
 i_type = ["addi", "xori", "ori", "andi", "slli", "srli", "srai", "slti", "sltiu"]
@@ -22,8 +23,12 @@ def parse_number(input, length = 12):
     else:
         result = int(input)
     
+    if (result >= 2 ** (length - 1) or result < (2 ** (length - 1)) * -1):
+        print(f"(WARN) Immediate input {input[:-1]} was truncated to length {length}")
+
     if (result < 0):
         result = result + 2 ** length
+
     return f"{result:0{length}b}"
     
 def parse_register(token):
@@ -114,7 +119,7 @@ def assemble_line(line):
     
     funct3 = f"{funct3_dict[inst]:0{3}b}"
     funct7 = "0000000"
-    if "sra" in inst:
+    if "sra" in inst or "sub" in inst:
         funct7 = "0100000"
 
     full_string = opcode
@@ -164,6 +169,7 @@ def assemble_line(line):
 
     return full_string
 
+start = time.perf_counter_ns()
 parser = argparse.ArgumentParser(description="RISC-V assembler")
 parser.add_argument("source", help="File name to be parsed")
 parser.add_argument("--hex", help="Write output as hex instead of binary", action="store_true")
@@ -190,6 +196,8 @@ write_file = open(destination_file, "w")
 
 count = 1
 for line in read_file:
+    if line == "\n":
+        continue
     binary = assemble_line(line)
     if ("e: " in binary):
         print(f"Skipping, error during assembly on line {count}: {binary[3:]}")
@@ -202,8 +210,10 @@ for line in read_file:
             write_file.write(binary + "\n")
 
     count += 1
+end = time.perf_counter_ns()
 
 print(f"Completed assembly and wrote binary to {destination_file}")
+print(f"Time taken: {(end - start) / 1000000.0}ms")
 
 read_file.close()
 write_file.close()
