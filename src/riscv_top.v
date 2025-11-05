@@ -1,5 +1,5 @@
 module riscv_top(
-    input                        clk,
+    input                        clkin,
 	input                        uart_rx,
     input                        button0,
     input                        button1,
@@ -9,12 +9,16 @@ module riscv_top(
     output                       ws2812
 );
 
+wire clkoutp, clk;
+
+Gowin_rPLL rpll_clk(.clkin(clkin), .clkoutp(clkoutp), .clkout(clk));
+
 localparam INIT = 0;
 localparam FETCH = 1;
 localparam EXEC = 2;
 localparam FREEZE = 3;
 
-localparam CLOCK_REDUCTION = 23;
+localparam CLOCK_REDUCTION = 25;
 
 reg [63:0] counter;
 
