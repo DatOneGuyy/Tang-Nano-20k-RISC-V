@@ -3,17 +3,59 @@ module riscv_top(
 	input                        uart_rx,
     input                        button0,
     input                        button1,
+
 	output                       uart_tx,
     output                       led0,
     output                       led1,
-    output                       ws2812
+    output                       ws2812,
+
+    output         O_sdram_clk,
+    output         O_sdram_cke,
+    output         O_sdram_cs_n,
+    output         O_sdram_cas_n,
+    output         O_sdram_ras_n,
+    output         O_sdram_wen_n,
+    output [3:0]   O_sdram_dqm,
+    output [10:0]  O_sdram_addr,
+    output [1:0]   O_sdram_ba,
+    inout  [31:0]  IO_sdram_dq
 );
 
 wire clkoutp, clk;
 
 Gowin_rPLL rpll_clk(.clkin(clkin), .clkoutp(clkoutp), .clkout(clk));
 
-memory_controller system_memory(.clk(clk), .rpll_clk(clkoutp));
+reg send_cmd;
+reg [2:0] cmd, write_type;
+reg [31:0] addr, write_data;
+wire init_done, cmd_done;
+wire [31:0] memory_read_out;
+
+memory_controller system_memory(
+    .clk(clk), 
+    .rpll_clk(clkoutp),
+
+    .send_cmd(send_cmd),
+    .cmd(cmd),
+    .write_type(write_type),
+    .addr(addr),
+    .write_data(write_data),
+
+    .init_done(init_done),
+    .cmd_done(cmd_done),
+    .memory_read_out(memory_read_out),
+
+    .O_sdram_clk(O_sdram_clk),
+    .O_sdram_cke(O_sdram_cke),
+    .O_sdram_cs_n(O_sdram_cs_n),
+    .O_sdram_cas_n(O_sdram_cas_n),
+    .O_sdram_ras_n(O_sdram_ras_n),
+    .O_sdram_wen_n(O_sdram_wen_n),
+    .O_sdram_dqm(O_sdram_dqm),
+    .O_sdram_addr(O_sdram_addr),
+    .O_sdram_ba(O_sdram_ba),
+    .IO_sdram_dq(IO_sdram_dq)
+);
 
 localparam INIT = 0;
 localparam FETCH = 1;
