@@ -13,6 +13,8 @@ wire clkoutp, clk;
 
 Gowin_rPLL rpll_clk(.clkin(clkin), .clkoutp(clkoutp), .clkout(clk));
 
+memory_controller system_memory(.clk(clk), .rpll_clk(clkoutp));
+
 localparam INIT = 0;
 localparam FETCH = 1;
 localparam EXEC = 2;
@@ -74,7 +76,7 @@ wire mem_write_en;
 wire jal;
 wire jalr;
 
-reg regwrite_en;
+wire regwrite_en = ~clk & (state == FETCH);
 
 register_file regs(.clk(clk), .read1_en(read1_en), .read2_en(read2_en), .write1_en(write1_en), .read1_dest(read1_dest), .read2_dest(read2_dest), .write1_dest(write1_dest), .write_value(write_value), .regwrite_en(regwrite_en), .read_value1(read_value1), .read_value2(read_value2), .full_file(registers));
 
@@ -105,7 +107,6 @@ always @(posedge clk) begin
             FETCH: begin
                 send_data <= 1'b1;
                 read_program <= 1'b1;
-                regwrite_en <= 1'b0;
                 
                 debug_label <= "program counter: ";
                 debug_data <= pc;
@@ -132,7 +133,6 @@ always @(posedge clk) begin
                 end
 
                 write_value <= (reg_write_from_mem ? 0 : alu_result);
-                regwrite_en <= 1'b1;
                 state <= FETCH;
             end
  
