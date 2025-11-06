@@ -143,7 +143,10 @@ always @(posedge clk) begin
         case (state)
             INIT: begin
                 pc <= 0;
-                state <= FETCH;
+
+                if (init_done) begin
+                    state <= FETCH;
+                end
             end
 
             FETCH: begin
