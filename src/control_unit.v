@@ -9,10 +9,6 @@ module control_unit(
     output reg [4:0] read2_dest,
     output reg [4:0] write1_dest,
 
-    output reg reg_write_from_mem,
-    output reg mem_read_en,
-    output reg mem_write_en,
-
     output reg jal,
     output reg jalr
 );
@@ -32,10 +28,6 @@ wire [6:0] funct3 = instruction[14:12];
 wire [6:0] funct7 = instruction[31:25];
 
 always @(*) begin
-    reg_write_from_mem <= 1'b0;
-    mem_read_en <= 1'b0;
-    mem_write_en <= 1'b0;
-
     jalr <= opcode == J_TYPE_LINK;
     jal <= opcode == J_TYPE;
 

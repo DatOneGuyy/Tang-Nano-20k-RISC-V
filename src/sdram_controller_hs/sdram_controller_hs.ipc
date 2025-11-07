@@ -8,7 +8,7 @@ version=1.0
 
 [Config]
 Addr_Column_Width=8
-Addr_Row_Width=12
+Addr_Row_Width=11
 Bank_Width=2
 CL=3
 Data_Width=32
