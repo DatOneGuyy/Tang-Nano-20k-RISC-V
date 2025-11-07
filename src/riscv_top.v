@@ -26,43 +26,19 @@ wire clkoutp, clk;
 Gowin_rPLL rpll_clk(.clkin(clkin), .clkoutp(clkoutp), .clkout(clk));
 
 reg send_cmd;
-reg [2:0] cmd, write_type;
-reg [31:0] addr, write_data;
-wire init_done, cmd_done;
+reg [2:0] cmd;
+reg [2:0] write_type;
+reg [31:0] addr; 
+wire [31:0] memory_write_data;
+wire init_done, mem_op_done;
 wire [31:0] memory_read_out;
-
-memory_controller system_memory(
-    .clk(clk), 
-    .rpll_clk(clkoutp),
-
-    .send_cmd(send_cmd),
-    .cmd(cmd),
-    .write_type(write_type),
-    .addr(addr),
-    .write_data(write_data),
-
-    .init_done(init_done),
-    .cmd_done(cmd_done),
-    .memory_read_out(memory_read_out),
-
-    .O_sdram_clk(O_sdram_clk),
-    .O_sdram_cke(O_sdram_cke),
-    .O_sdram_cs_n(O_sdram_cs_n),
-    .O_sdram_cas_n(O_sdram_cas_n),
-    .O_sdram_ras_n(O_sdram_ras_n),
-    .O_sdram_wen_n(O_sdram_wen_n),
-    .O_sdram_dqm(O_sdram_dqm),
-    .O_sdram_addr(O_sdram_addr),
-    .O_sdram_ba(O_sdram_ba),
-    .IO_sdram_dq(IO_sdram_dq)
-);
 
 localparam INIT = 0;
 localparam FETCH = 1;
 localparam EXEC = 2;
-localparam FREEZE = 3;
+localparam MEMORY_OP_WAIT = 3;
 
-localparam CLOCK_REDUCTION = 25;
+localparam CLOCK_REDUCTION = 24;
 
 reg [63:0] counter;
 
@@ -111,28 +87,54 @@ wire comparison_flag;
 wire [31:0] jalr_pc_assignment;
 wire [31:0] jump_immediate;
 
-wire reg_write_from_mem;
-wire mem_read_en;
-wire mem_write_en;
+reg reg_write_from_mem;
 
 wire jal;
 wire jalr;
 
-wire regwrite_en = ~clk & (state == FETCH);
+wire regwrite_en = (~clk & (state == FETCH)) | (reg_write_from_mem);
 
 register_file regs(.clk(clk), .read1_en(read1_en), .read2_en(read2_en), .write1_en(write1_en), .read1_dest(read1_dest), .read2_dest(read2_dest), .write1_dest(write1_dest), .write_value(write_value), .regwrite_en(regwrite_en), .read_value1(read_value1), .read_value2(read_value2), .full_file(registers));
 
 alu ALU(.pc(pc), .op1(operand1), .op2(operand2), .instruction(instruction), .result(alu_result), .jalr(jalr_pc_assignment), .comparison_flag(comparison_flag));
 
-operand_controller opcon(.register_read1(read_value1), .register_read2(read_value2), .instruction(instruction), .alu_op1(operand1), .alu_op2(operand2), .jump_immediate(jump_immediate));
+operand_controller opcon(.register_read1(read_value1), .register_read2(read_value2), .instruction(instruction), .alu_op1(operand1), .alu_op2(operand2), .jump_immediate(jump_immediate), .memory_write_data(memory_write_data));
 
-control_unit controller(.instruction(instruction), .read1_en(read1_en), .read2_en(read2_en), .write1_en(write1_en), .read1_dest(read1_dest), .read2_dest(read2_dest), .write1_dest(write1_dest), .reg_write_from_mem(reg_write_from_mem), .mem_read_en(mem_read_en), .mem_write_en(mem_write_en), .jal(jal), .jalr(jalr));
+control_unit controller(.instruction(instruction), .read1_en(read1_en), .read2_en(read2_en), .write1_en(write1_en), .read1_dest(read1_dest), .read2_dest(read2_dest), .write1_dest(write1_dest), .jal(jal), .jalr(jalr));
+
+memory_controller system_memory(
+    .clk(clk), 
+    .rpll_clk(clkoutp),
+
+    .instruction(instruction),
+    .cpu_state(state),
+    .write_type(instruction[14:12]),
+    .addr(alu_result),
+    .write_data(memory_write_data),
+
+    .init_done(init_done),
+    .operation_done(mem_op_done),
+    .memory_read_out(memory_read_out),
+
+    .O_sdram_clk(O_sdram_clk),
+    .O_sdram_cke(O_sdram_cke),
+    .O_sdram_cs_n(O_sdram_cs_n),
+    .O_sdram_cas_n(O_sdram_cas_n),
+    .O_sdram_ras_n(O_sdram_ras_n),
+    .O_sdram_wen_n(O_sdram_wen_n),
+    .O_sdram_dqm(O_sdram_dqm),
+    .O_sdram_addr(O_sdram_addr),
+    .O_sdram_ba(O_sdram_ba),
+    .IO_sdram_dq(IO_sdram_dq)
+);
 
 wire byte_output;
 
 reg [31:0] pc_increment;
 
-assign led0 = 0;
+reg memory_indicator;
+
+assign led0 = memory_indicator;
 assign led1 = 0;
 
 wire [6:0] funct7 = instruction[31:25];
@@ -142,6 +144,8 @@ always @(posedge clk) begin
         counter <= counter + 64'b1;
         case (state)
             INIT: begin
+                memory_indicator <= 1'b1;
+                reg_write_from_mem <= 1'b0;
                 pc <= 0;
 
                 if (init_done) begin
@@ -152,33 +156,55 @@ always @(posedge clk) begin
             FETCH: begin
                 send_data <= 1'b1;
                 read_program <= 1'b1;
-                
+                memory_indicator <= 1'b1;
+                reg_write_from_mem <= 1'b0;
+
+                send_data <= 1'b1;
                 debug_label <= "program counter: ";
                 debug_data <= pc;
-                send_data <= 1'b1;
 
                 state <= EXEC;
             end
             
             EXEC: begin
                 read_program <= 1'b0;
-
-                debug_label <= "funct7: ";
-                debug_data <= funct7[5];
-                send_data <= 1'b1;
+                memory_indicator <= 1'b1;
+                reg_write_from_mem <= 1'b0;
 
                 if (comparison_flag | jal) begin
                     pc <= pc + jump_immediate;
+                    state <= FETCH;
                 end
                 else if (jalr) begin
                     pc <= jalr_pc_assignment;
+                    state <= FETCH;
+                end
+                else if (instruction[6:2] == 5'b00000 | instruction[6:2] == 5'b01000) begin
+                    state <= MEMORY_OP_WAIT;
                 end
                 else begin
                     pc <= pc + 4;
+                    state <= FETCH;
                 end
 
-                write_value <= (reg_write_from_mem ? 0 : alu_result);
-                state <= FETCH;
+                write_value <= alu_result;
+            end
+
+            MEMORY_OP_WAIT: begin
+                memory_indicator <= 1'b0;
+                if (mem_op_done) begin
+                    reg_write_from_mem <= 1'b1;
+                    write_value <= memory_read_out;
+
+                    if (pc == 12) begin
+                        send_data <= 1'b1;
+                        debug_label <= "write value: ";
+                        debug_data <= memory_read_out;
+                    end
+
+                    pc <= pc + 4;
+                    state <= FETCH;
+                end
             end
  
             default:
