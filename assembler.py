@@ -134,7 +134,7 @@ def assemble_line(line):
             rd = parse_register(tokens[1])
             imm = ""
             if (inst[0] == "l"):
-                rs1 = parse_register(tokens[2].split("(")[1][:-1])
+                rs1 = parse_register(tokens[2].split("(")[1].split(")")[0])
                 imm = parse_number(tokens[2].split("(")[0])
             else:
                 rs1 = parse_register(tokens[2])
@@ -146,7 +146,7 @@ def assemble_line(line):
             full_string = imm + rs1 + funct3 + rd + opcode
         case "S":
             rs2 = parse_register(tokens[1])
-            rs1 = parse_register(tokens[2].split("(")[1][:-1])
+            rs1 = parse_register(tokens[2].split("(")[1].split(")")[0])
             imm = parse_number(tokens[2].split("(")[0])
 
             full_string = imm[:7] + rs2 + rs1 + funct3 + imm[-5:] + opcode

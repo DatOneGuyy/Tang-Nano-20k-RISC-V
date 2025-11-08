@@ -4,7 +4,8 @@ module operand_controller(
     input [31:0] instruction,
     output reg [31:0] alu_op1,
     output reg [31:0] alu_op2,
-    output reg [31:0] jump_immediate
+    output reg [31:0] jump_immediate,
+    output reg [31:0] memory_write_data
 );
 
 localparam I_TYPE = 7'b0010011;
@@ -24,6 +25,7 @@ always @(*) begin
     alu_op1 <= register_read1;
     alu_op2 <= register_read2;
     jump_immediate <= 32'b0;
+    memory_write_data <= 32'b0;
     
     case (opcode)
         I_TYPE, I_TYPE_LOAD: begin
@@ -33,6 +35,11 @@ always @(*) begin
 
         S_TYPE: begin
             alu_op2 <= {instruction[31:25], instruction[11:7]};
+            case (funct3)
+                3'b001: memory_write_data <= register_read2[15:0];
+                3'b010: memory_write_data <= register_read2[31:0];
+                default: memory_write_data <= register_read2;
+            endcase
         end
 
         LUI_TYPE, AUIPC_TYPE: begin

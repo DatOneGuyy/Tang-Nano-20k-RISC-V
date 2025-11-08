@@ -4,7 +4,7 @@ module uart_out(
     output reg debug_send
 );
 
-localparam DEBUG_DELAY_CYCLES = 255000;
+localparam DEBUG_DELAY_CYCLES = 592674;
 
 localparam INIT_DEBUG = 0;
 localparam WAIT_DEBUG = 1;
