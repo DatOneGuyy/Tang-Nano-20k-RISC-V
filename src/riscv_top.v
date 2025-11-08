@@ -61,8 +61,7 @@ wire [1023:0] registers;
 
 debounce_filter button0_f(.clk(clk), .button(button0), .filtered(button0_filtered));
 debounce_filter button1_f(.clk(clk), .button(button1), .filtered(button1_filtered));
-debugger debug(.clk(clk), .rst(button0), .uart_rx(uart_rx), .debug_send(debug_send), .label(debug_label), .data(debug_data), .register_data(registers), .uart_tx(uart_tx));
-uart_out debug_limiter(.clk(clk), .send_data(send_data), .debug_send(debug_send));
+debugger debug(.clk(clk), .rst(button0), .uart_rx(uart_rx), .debug_send(send_data), .label(debug_label), .data(debug_data), .register_data(registers), .uart_tx(uart_tx));
 
 instruction_fetch instruction_reader(.clk(read_program), .pc(pc), .instruction(instruction));
 

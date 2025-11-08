@@ -9,6 +9,8 @@ module debugger(
 	output                       uart_tx
 );
 
+localparam DEBUG_DELAY_CYCLES = 592674;
+
 reg [1:0] state;
 localparam WAIT = 0;
 localparam SENDING = 1;
@@ -21,23 +23,44 @@ uart_test uart(
     .rst(rst), 
     .uart_rx(uart_rx), 
     .send(filtered_send), 
-    .label(label), 
-    .data(data), 
-    .register_data(register_data),
+    .label(label_hold), 
+    .data(data_hold), 
+    .register_data(register_hold),
     .uart_tx(uart_tx)
 );
+
+reg [19:0] delay_counter;
+
+reg [255:0] label_hold;
+reg [63:0] data_hold;
+reg [1023:0] registers_hold;
 
 always @(posedge clk) begin
     case (state)
         WAIT: begin
-            filtered_send <= 1'b0;
             if (debug_send) begin
+                filtered_send <= 1'b1;
+
+                label_hold <= label;
+                data_hold <= data;
+                registers_hold <= register_data;
+
                 state <= SENDING;
+            end
+            else begin
+                filtered_send <= 1'b0;
             end
         end
         SENDING: begin
-            filtered_send <= 1'b1;
-            state <= WAIT;
+            filtered_send <= 1'b0;
+
+            if (delay_counter < DEBUG_DELAY_CYCLES) begin
+                delay_counter <= delay_counter + 20'b1;
+            end
+            else begin
+                delay_counter <= 20'b0;
+                state <= WAIT;
+            end
         end
         INIT: begin
             state <= WAIT;
