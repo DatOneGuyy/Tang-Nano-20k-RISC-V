@@ -38,9 +38,9 @@ localparam FETCH = 1;
 localparam EXEC = 2;
 localparam MEMORY_OP_WAIT = 3;
 
-localparam CLOCK_REDUCTION = 24;
+localparam CYCLE_DELAY = 0;
 
-reg [63:0] counter;
+reg [29:0] counter;
 
 reg [1:0] state;
 
@@ -137,12 +137,18 @@ assign led0 = memory_indicator;
 assign led1 = 0;
 
 wire [6:0] funct7 = instruction[31:25];
+reg [31:0] read_cycles;
+reg [31:0] write_cycles;
 
 always @(posedge clk) begin
-    if (counter[CLOCK_REDUCTION:0] == 0) begin
-        counter <= counter + 64'b1;
+    if (counter < CYCLE_DELAY) begin
+        counter <= counter + 30'b1;
+    end
+    else begin
+        counter <= 30'b0;
         case (state)
             INIT: begin
+                send_data <= 1'b0;
                 memory_indicator <= 1'b1;
                 reg_write_from_mem <= 1'b0;
                 pc <= 0;
@@ -153,14 +159,10 @@ always @(posedge clk) begin
             end
 
             FETCH: begin
-                send_data <= 1'b1;
                 read_program <= 1'b1;
                 memory_indicator <= 1'b1;
                 reg_write_from_mem <= 1'b0;
-
-                send_data <= 1'b1;
-                debug_label <= "program counter: ";
-                debug_data <= pc;
+                send_data <= 1'b0;
 
                 state <= EXEC;
             end
@@ -169,6 +171,13 @@ always @(posedge clk) begin
                 read_program <= 1'b0;
                 memory_indicator <= 1'b1;
                 reg_write_from_mem <= 1'b0;
+                send_data <= 1'b0;
+
+                if (pc == 16) begin
+                    send_data <= 1'b1;
+                    debug_label <= "[read, write]";
+                    debug_data <= {read_cycles, write_cycles};
+                end
 
                 if (comparison_flag | jal) begin
                     pc <= pc + jump_immediate;
@@ -191,28 +200,24 @@ always @(posedge clk) begin
 
             MEMORY_OP_WAIT: begin
                 memory_indicator <= 1'b0;
+                send_data <= 1'b0;
+                if (~instruction[5]) 
+                    read_cycles <= read_cycles + 1;
+                else
+                    write_cycles <= write_cycles + 1;
+                
                 if (mem_op_done) begin
                     reg_write_from_mem <= 1'b1;
                     write_value <= memory_read_out;
-
-                    if (pc == 12) begin
-                        send_data <= 1'b1;
-                        debug_label <= "write value: ";
-                        debug_data <= memory_read_out;
-                    end
 
                     pc <= pc + 4;
                     state <= FETCH;
                 end
             end
- 
+
             default:
                 state <= FETCH;
         endcase
-    end
-    else begin
-        send_data <= 1'b0;
-        counter <= counter + 1;
     end
 end
 

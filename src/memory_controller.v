@@ -26,7 +26,8 @@ module memory_controller(
 
 localparam WAIT = 0;
 localparam ACTIVATE = 1;
-localparam RW = 2;
+localparam PAUSE = 2;
+localparam RW = 3;
 
 localparam INIT = 0;
 localparam FETCH = 1;
@@ -52,17 +53,20 @@ reg [31:0] data_hold;
 reg [3:0] write_mask_hold;
 reg [31:0] address_hold;
 
+reg [3:0] pause_counter;
+
 always @(posedge clk) begin
     case (state)
         WAIT: begin
             operation_done <= 1'b1;
+            send_cmd <= 1'b0;
             
             if ((instruction[6:2] == 5'b00000 | instruction[6:2] == 5'b01000) & (cpu_state == FETCH)) begin
                 operation_done <= 1'b0;
                 send_cmd <= 1'b1;
                 cmd <= 3'b011;
 
-                operation_type <= instruction[5];
+                operation_type <= ~instruction[5];
                 data_hold <= write_data;
                 write_mask_hold <= write_mask;
                 address_hold <= addr;
@@ -79,7 +83,7 @@ always @(posedge clk) begin
                 send_cmd <= 1'b1;
                 cmd <= {2'b10, operation_type};
                 
-                state <= RW;
+                state <= PAUSE;
             end
         end
 
@@ -87,7 +91,26 @@ always @(posedge clk) begin
             operation_done <= 1'b0;
             send_cmd <= 1'b0;
 
-            if (cmd_done) begin 
+            if (cmd_done) begin
+                if (operation_type) begin 
+                    state <= PAUSE;
+                end
+                else begin
+                    operation_done <= 1'b1;
+                    state <= WAIT;
+                end
+            end
+        end
+
+        PAUSE: begin
+            send_cmd <= 1'b0;
+            operation_done <= 1'b0;
+
+            if (pause_counter < 3) begin
+                pause_counter <= pause_counter + 4'b1;
+            end
+            else begin
+                pause_counter <= 4'b0;
                 operation_done <= 1'b1;
                 state <= WAIT;
             end
