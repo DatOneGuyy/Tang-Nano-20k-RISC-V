@@ -37,12 +37,13 @@ localparam INIT = 0;
 localparam FETCH = 1;
 localparam EXEC = 2;
 localparam MEMORY_OP_WAIT = 3;
+localparam HALT = 4;
 
 localparam CYCLE_DELAY = 0;
 
 reg [29:0] counter;
 
-reg [1:0] state;
+reg [2:0] state;
 
 wire debug_send;
 reg [255:0] debug_label;
@@ -176,7 +177,7 @@ always @(posedge clk) begin
                 if (pc == 16) begin
                     send_data <= 1'b1;
                     debug_label <= "[read, write]";
-                    debug_data <= {read_cycles, write_cycles};
+                    debug_data <= {operand1, operand2};
                 end
 
                 if (comparison_flag | jal) begin
@@ -201,6 +202,7 @@ always @(posedge clk) begin
             MEMORY_OP_WAIT: begin
                 memory_indicator <= 1'b0;
                 send_data <= 1'b0;
+
                 if (~instruction[5]) 
                     read_cycles <= read_cycles + 1;
                 else
@@ -213,6 +215,10 @@ always @(posedge clk) begin
                     pc <= pc + 4;
                     state <= FETCH;
                 end
+            end
+
+            HALT: begin
+
             end
 
             default:

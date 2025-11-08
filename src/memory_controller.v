@@ -3,7 +3,7 @@ module memory_controller(
     input rpll_clk,
 
     input [31:0] instruction,
-    input [1:0] cpu_state,
+    input [2:0] cpu_state,
     input [2:0] write_type,
     input [31:0] addr,
     input [31:0] write_data,
@@ -54,6 +54,9 @@ reg [3:0] write_mask_hold;
 reg [31:0] address_hold;
 
 reg [3:0] pause_counter;
+
+wire [31:0] raw_read;
+assign memory_read_out = raw_read;
 
 always @(posedge clk) begin
     case (state)
@@ -134,7 +137,7 @@ SDRAM_Controller_HS_Top sdram_controller(
     .I_sdrc_data(data_hold),
     .I_sdrc_data_len(8'b0),
 
-    .O_sdrc_data(memory_read_out),
+    .O_sdrc_data(raw_read),
     .O_sdrc_init_done(init_done),
     .O_sdrc_cmd_ack(cmd_done),
 
