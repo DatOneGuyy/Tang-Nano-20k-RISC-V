@@ -12,8 +12,8 @@ module uart_test(
 parameter                        LABEL_LENGTH = 32;
 parameter                        DATA_LENGTH = 8;
 parameter                        REGISTER_LENGTH = 128;
-parameter                        CLK_FRE  = 100.287; //Mhz
-parameter                        UART_FRE = 115200; //hz
+parameter                        CLK_FRE  = 27; //Mhz
+parameter                        UART_FRE = 230400; //hz
 localparam                       IDLE =  0;
 localparam                       SEND_LABEL =  1; //send 
 localparam                       WAIT =  2; //wait 1 second and send uart received data

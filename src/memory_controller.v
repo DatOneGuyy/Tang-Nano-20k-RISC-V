@@ -3,7 +3,7 @@ module memory_controller(
     input rpll_clk,
 
     input [31:0] instruction,
-    input [1:0] cpu_state,
+    input [2:0] cpu_state,
     input [2:0] write_type,
     input [31:0] addr,
     input [31:0] write_data,
@@ -26,7 +26,8 @@ module memory_controller(
 
 localparam WAIT = 0;
 localparam ACTIVATE = 1;
-localparam RW = 2;
+localparam PAUSE = 2;
+localparam RW = 3;
 
 localparam INIT = 0;
 localparam FETCH = 1;
@@ -38,9 +39,9 @@ reg [1:0] state;
 
 always @(*) begin
     case (write_type)
-        0: write_mask <= 4'b0000;
+        2: write_mask <= 4'b0000;
         1: write_mask <= ~(4'b0011 << addr[1:0]);
-        2: write_mask <= ~(4'b0001 << addr[1:0]);
+        0: write_mask <= ~(4'b0001 << addr[1:0]);
         default: write_mask <= 4'b1111;
     endcase
 end
@@ -52,17 +53,23 @@ reg [31:0] data_hold;
 reg [3:0] write_mask_hold;
 reg [31:0] address_hold;
 
+reg [3:0] pause_counter;
+
+wire [31:0] raw_read;
+assign memory_read_out = ~{{8{write_mask_hold[3]}}, {8{write_mask_hold[2]}}, {8{write_mask_hold[1]}}, {8{write_mask_hold[0]}}} & raw_read;
+
 always @(posedge clk) begin
     case (state)
         WAIT: begin
             operation_done <= 1'b1;
+            send_cmd <= 1'b0;
             
             if ((instruction[6:2] == 5'b00000 | instruction[6:2] == 5'b01000) & (cpu_state == FETCH)) begin
                 operation_done <= 1'b0;
                 send_cmd <= 1'b1;
                 cmd <= 3'b011;
 
-                operation_type <= instruction[5];
+                operation_type <= ~instruction[5];
                 data_hold <= write_data;
                 write_mask_hold <= write_mask;
                 address_hold <= addr;
@@ -79,7 +86,7 @@ always @(posedge clk) begin
                 send_cmd <= 1'b1;
                 cmd <= {2'b10, operation_type};
                 
-                state <= RW;
+                state <= PAUSE;
             end
         end
 
@@ -87,7 +94,26 @@ always @(posedge clk) begin
             operation_done <= 1'b0;
             send_cmd <= 1'b0;
 
-            if (cmd_done) begin 
+            if (cmd_done) begin
+                if (operation_type) begin 
+                    state <= PAUSE;
+                end
+                else begin
+                    operation_done <= 1'b1;
+                    state <= WAIT;
+                end
+            end
+        end
+
+        PAUSE: begin
+            send_cmd <= 1'b0;
+            operation_done <= 1'b0;
+
+            if (pause_counter < 3) begin
+                pause_counter <= pause_counter + 4'b1;
+            end
+            else begin
+                pause_counter <= 4'b0;
                 operation_done <= 1'b1;
                 state <= WAIT;
             end
@@ -111,7 +137,7 @@ SDRAM_Controller_HS_Top sdram_controller(
     .I_sdrc_data(data_hold),
     .I_sdrc_data_len(8'b0),
 
-    .O_sdrc_data(memory_read_out),
+    .O_sdrc_data(raw_read),
     .O_sdrc_init_done(init_done),
     .O_sdrc_cmd_ack(cmd_done),
 
