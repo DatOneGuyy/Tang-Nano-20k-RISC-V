@@ -16,7 +16,7 @@ parser.add_argument('--rsint', action='store_true')
 args = parser.parse_args()
 
 uart = serial.Serial()
-uart.baudrate = 115200
+uart.baudrate = 230400
 uart.port = 'COM11'
 
 uart.open()
