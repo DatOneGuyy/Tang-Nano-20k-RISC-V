@@ -34,6 +34,8 @@ always @(posedge clk) begin
     if (write1_en & regwrite_en) begin
         combined[({5'b0, write1_dest} << 5) +: 32] <= write_value;
     end
+
+    combined[31:0] <= 32'b0;
 end
 
 endmodule

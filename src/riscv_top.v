@@ -1,5 +1,5 @@
 module riscv_top(
-    input                        clkin,
+    input                        clk,
 	input                        uart_rx,
     input                        button0,
     input                        button1,
@@ -21,9 +21,9 @@ module riscv_top(
     inout  [31:0]  IO_sdram_dq
 );
 
-wire clkoutp, clk;
+wire clkoutp, clkout;
 
-Gowin_rPLL rpll_clk(.clkin(clkin), .clkoutp(clkoutp), .clkout(clk));
+Gowin_rPLL rpll_clk(.clkin(clk), .clkoutp(clkoutp), .clkout(clkout));
 
 reg send_cmd;
 reg [2:0] cmd;
@@ -38,8 +38,6 @@ localparam FETCH = 1;
 localparam EXEC = 2;
 localparam MEMORY_OP_WAIT = 3;
 localparam HALT = 4;
-
-localparam CYCLE_DELAY = 0;
 
 reg [29:0] counter;
 
@@ -141,9 +139,12 @@ wire [6:0] funct7 = instruction[31:25];
 reg [31:0] read_cycles;
 reg [31:0] write_cycles;
 
+localparam CYCLE_DELAY = 1000000;
+
 always @(posedge clk) begin
     if (counter < CYCLE_DELAY) begin
         counter <= counter + 30'b1;
+        send_data <= 1'b0;
     end
     else begin
         counter <= 30'b0;
@@ -174,10 +175,10 @@ always @(posedge clk) begin
                 reg_write_from_mem <= 1'b0;
                 send_data <= 1'b0;
 
-                if (pc == 16) begin
+                if (pc < 48) begin
                     send_data <= 1'b1;
-                    debug_label <= "[read, write]";
-                    debug_data <= {operand1, operand2};
+                    debug_label <= "[pc, result]: ";
+                    debug_data <= {pc, alu_result};
                 end
 
                 if (comparison_flag | jal) begin
