@@ -9,7 +9,7 @@ reg [31:0] mem [0:16383];
 wire [13:0] addr = pc[15:2];
 
 initial begin
-    $readmemh("programs/memory_test.mem", mem);
+    $readmemh("programs/jump_testing.mem", mem);
 end
 
 always @(posedge clk) begin

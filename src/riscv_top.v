@@ -177,10 +177,10 @@ always @(posedge clk) begin
                 reg_write_from_mem <= 1'b0;
                 send_data <= 1'b0;
 
-                if (pc < 48) begin
+                if (pc < 80) begin
                     send_data <= 1'b1;
-                    debug_label <= "[pc, result]: ";
-                    debug_data <= {pc, alu_result};
+                    debug_label <= "[pc, jump]: ";
+                    debug_data <= {pc, jump_immediate};
                 end
 
                 if (comparison_flag | jal) begin
