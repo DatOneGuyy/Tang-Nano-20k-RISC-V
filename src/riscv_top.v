@@ -138,6 +138,7 @@ assign led1 = 0;
 wire [6:0] funct7 = instruction[31:25];
 reg [31:0] read_cycles;
 reg [31:0] write_cycles;
+reg [3:0] memory_write_mask;
 
 localparam CYCLE_DELAY = 1000000;
 
@@ -147,6 +148,7 @@ always @(posedge clk) begin
         send_data <= 1'b0;
     end
     else begin
+        memory_write_mask <= 4'b1111;
         counter <= 30'b0;
         case (state)
             INIT: begin
