@@ -1,5 +1,5 @@
 module riscv_top(
-    input                        clk,
+    input                        clkin,
 	input                        uart_rx,
     input                        button0,
     input                        button1,
@@ -21,9 +21,9 @@ module riscv_top(
     inout  [31:0]  IO_sdram_dq
 );
 
-wire clkoutp, clkout;
+wire clkoutp, clk;
 
-Gowin_rPLL rpll_clk(.clkin(clk), .clkoutp(clkoutp), .clkout(clkout));
+Gowin_rPLL rpll_clk(.clkin(clkin), .clkoutp(clkoutp), .clkout(clk));
 
 reg send_cmd;
 reg [2:0] cmd;
@@ -138,9 +138,8 @@ assign led1 = 0;
 wire [6:0] funct7 = instruction[31:25];
 reg [31:0] read_cycles;
 reg [31:0] write_cycles;
-reg [3:0] memory_write_mask;
 
-localparam CYCLE_DELAY = 1000000;
+localparam CYCLE_DELAY = 0;
 
 always @(posedge clk) begin
     if (counter < CYCLE_DELAY) begin
@@ -148,7 +147,6 @@ always @(posedge clk) begin
         send_data <= 1'b0;
     end
     else begin
-        memory_write_mask <= 4'b1111;
         counter <= 30'b0;
         case (state)
             INIT: begin
@@ -177,10 +175,10 @@ always @(posedge clk) begin
                 reg_write_from_mem <= 1'b0;
                 send_data <= 1'b0;
 
-                if (pc < 80) begin
+                if (pc == 400) begin
                     send_data <= 1'b1;
-                    debug_label <= "[pc, jump]: ";
-                    debug_data <= {pc, jump_immediate};
+                    debug_label <= "[operand1]: ";
+                    debug_data <= registers[{read1_dest, 5'b0} +: 32] & {32{read1_en}};
                 end
 
                 if (comparison_flag | jal) begin

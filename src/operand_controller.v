@@ -52,7 +52,7 @@ always @(*) begin
 
         J_TYPE, J_TYPE_LINK: begin
             alu_op2[11:0] <= instruction[31:20];
-            jump_immediate <= {{12{instruction[31]}}, instruction[31], instruction[19:12], instruction[20], instruction[30:21], 1'b0};
+            jump_immediate <= {{11{instruction[31]}}, instruction[31], instruction[19:12], instruction[20], instruction[30:21], 1'b0};
         end
     endcase
 end
