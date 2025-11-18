@@ -39,10 +39,10 @@ reg [1:0] state;
 
 always @(*) begin
     case (write_type)
-        2: write_mask <= 4'b0000;
-        1: write_mask <= ~(4'b0011 << addr[1:0]);
-        0: write_mask <= ~(4'b0001 << addr[1:0]);
-        default: write_mask <= 4'b1111;
+        2: write_mask = 4'b0000;
+        1: write_mask = ~(4'b0011 << addr[1:0]);
+        0: write_mask = ~(4'b0001 << addr[1:0]);
+        default: write_mask = 4'b1111;
     endcase
 end
 
@@ -56,7 +56,7 @@ reg [31:0] address_hold;
 reg [3:0] pause_counter;
 
 wire [31:0] raw_read;
-assign memory_read_out = ~{{8{write_mask_hold[3]}}, {8{write_mask_hold[2]}}, {8{write_mask_hold[1]}}, {8{write_mask_hold[0]}}} & raw_read;
+assign memory_read_out = raw_read;
 
 always @(posedge clk) begin
     case (state)
@@ -109,7 +109,7 @@ always @(posedge clk) begin
             send_cmd <= 1'b0;
             operation_done <= 1'b0;
 
-            if (pause_counter < 3) begin
+            if (pause_counter < 4) begin
                 pause_counter <= pause_counter + 4'b1;
             end
             else begin

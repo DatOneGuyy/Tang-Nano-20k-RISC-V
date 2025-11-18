@@ -1,5 +1,5 @@
 module riscv_top(
-    input                        clkin,
+    input                        clk,
 	input                        uart_rx,
     input                        button0,
     input                        button1,
@@ -21,9 +21,9 @@ module riscv_top(
     inout  [31:0]  IO_sdram_dq
 );
 
-wire clkoutp, clk;
+wire clkoutp;
 
-Gowin_rPLL rpll_clk(.clkin(clkin), .clkoutp(clkoutp), .clkout(clk));
+Gowin_rPLL rpll_clk(.clkin(clk), .clkoutp(clkoutp));
 
 reg send_cmd;
 reg [2:0] cmd;
@@ -37,7 +37,6 @@ localparam INIT = 0;
 localparam FETCH = 1;
 localparam EXEC = 2;
 localparam MEMORY_OP_WAIT = 3;
-localparam HALT = 4;
 
 reg [29:0] counter;
 
@@ -139,7 +138,7 @@ wire [6:0] funct7 = instruction[31:25];
 reg [31:0] read_cycles;
 reg [31:0] write_cycles;
 
-localparam CYCLE_DELAY = 0;
+localparam CYCLE_DELAY = 10000000;
 
 always @(posedge clk) begin
     if (counter < CYCLE_DELAY) begin
@@ -164,7 +163,9 @@ always @(posedge clk) begin
                 read_program <= 1'b1;
                 memory_indicator <= 1'b1;
                 reg_write_from_mem <= 1'b0;
-                send_data <= 1'b0;
+                send_data <= 1'b1;
+                debug_label <= "program counter: ";
+                debug_data <= pc;
 
                 state <= EXEC;
             end
@@ -173,13 +174,13 @@ always @(posedge clk) begin
                 read_program <= 1'b0;
                 memory_indicator <= 1'b1;
                 reg_write_from_mem <= 1'b0;
-                send_data <= 1'b0;
 
-                if (pc == 400) begin
+                if (pc < 64) begin
                     send_data <= 1'b1;
-                    debug_label <= "[operand1]: ";
-                    debug_data <= registers[{read1_dest, 5'b0} +: 32] & {32{read1_en}};
+                    debug_label <= "mem write data: ";
+                    debug_data <= memory_write_data;
                 end
+                else send_data <= 1'b0;
 
                 if (comparison_flag | jal) begin
                     pc <= pc + jump_immediate;
@@ -213,13 +214,13 @@ always @(posedge clk) begin
                     reg_write_from_mem <= 1'b1;
                     write_value <= memory_read_out;
 
+                    send_data <= 1'b1;
+                    debug_label <= "memory read out: ";
+                    debug_data <= memory_read_out;
+
                     pc <= pc + 4;
                     state <= FETCH;
                 end
-            end
-
-            HALT: begin
-
             end
 
             default:
