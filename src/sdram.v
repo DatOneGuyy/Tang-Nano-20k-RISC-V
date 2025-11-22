@@ -200,9 +200,18 @@ always @(posedge clk) begin
         {READ, T_RCD+CAS+4'd1}: begin
             data_ready <= 1'b0;
             dout_buf <= next_dout;
-            dout32_buf <= dq_in;
             busy <= 0;
             state <= IDLE;
+            
+            if (access_type == 3'd2) begin
+                dout32_buf <= dq_in;
+            end
+            else if (access_type == 3'd1) begin
+                dout32_buf <= 32'hFFFF & (dq_in >> {addr_buf[1:0], 3'b0});
+            end
+            else begin  
+                dout32_buf <= 32'hFF & (dq_in >> {addr_buf[1:0], 3'b0});
+            end
         end
 
         // write sequence
@@ -226,9 +235,7 @@ always @(posedge clk) begin
                 dq_out <= din_buf << {addr_buf[1:0], 3'b0};
             end
             else begin
-                SDRAM_DQM <= addr_buf[1:0] == 2'd0 ? 4'b1110 :
-                         addr_buf[1:0] == 2'd1 ? 4'b1101 :
-                         addr_buf[1:0] == 2'd2 ? 4'b1011 : 4'b0111;     // only write the correct byte
+                SDRAM_DQM <= ~(4'b1 << addr_buf[1:0]);
                 dq_out <= {din_buf[7:0], din_buf[7:0], din_buf[7:0], din_buf[7:0]};
             end
 
