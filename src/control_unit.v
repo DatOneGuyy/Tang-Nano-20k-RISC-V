@@ -28,34 +28,34 @@ wire [6:0] funct3 = instruction[14:12];
 wire [6:0] funct7 = instruction[31:25];
 
 always @(*) begin
-    jalr <= opcode == J_TYPE_LINK;
-    jal <= opcode == J_TYPE;
+    jalr = opcode == J_TYPE_LINK;
+    jal = opcode == J_TYPE;
 
-    read1_dest <= instruction[19:15];
-    read2_dest <= instruction[24:20];
-    write1_dest <= instruction[11:7];
+    read1_dest = instruction[19:15];
+    read2_dest = instruction[24:20];
+    write1_dest = instruction[11:7];
 
-    read1_en <= 1'b1;
-    read2_en <= 1'b1;
-    write1_en <= 1'b1;
+    read1_en = 1'b1;
+    read2_en = 1'b1;
+    write1_en = 1'b1;
 
     case (opcode)
         I_TYPE, I_TYPE_LOAD, J_TYPE, J_TYPE_LINK: begin
-            read2_dest <= 5'b0;
-            read2_en <= 1'b0;
+            read2_dest = 5'b0;
+            read2_en = 1'b0;
         end
 
         S_TYPE, B_TYPE: begin
-            write1_dest <= 5'b0;
-            write1_en <= 1'b0;
+            write1_dest = 5'b0;
+            write1_en = 1'b0;
         end
 
         LUI_TYPE, AUIPC_TYPE: begin
-            read1_dest <= 5'b0;
-            read2_dest <= 5'b0;
+            read1_dest = 5'b0;
+            read2_dest = 5'b0;
 
-            read1_en <= 1'b0;
-            read2_en <= 1'b0;
+            read1_en = 1'b0;
+            read2_en = 1'b0;
         end
     endcase
 end

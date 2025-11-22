@@ -23,19 +23,22 @@ reg [1023:0] combined;
 assign full_file = combined;
 
 always @(posedge clk) begin
+    read_value1 <= 32'b0;
+    read_value2 <= 32'b0;
+    combined[31:0] <= 32'b0;
+
     if (read1_en) begin
-        read_value1 <= combined[({5'b0, read1_dest} << 5) +: 32];
+        read_value1 <= combined[{read1_dest, 5'b0} +: 32];
     end
 
     if (read2_en) begin
-        read_value2 <= combined[({5'b0, read2_dest} << 5) +: 32];
+        read_value2 <= combined[{read2_dest, 5'b0} +: 32];
     end
 
     if (write1_en & regwrite_en) begin
-        combined[({5'b0, write1_dest} << 5) +: 32] <= write_value;
+        combined[{write1_dest, 5'b0} +: 32] <= write_value;
     end
 
-    combined[31:0] <= 32'b0;
 end
 
 endmodule

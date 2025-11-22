@@ -1,4 +1,5 @@
 module alu(
+    input clk,
     input [31:0] pc,
     input signed [31:0] op1,
     input signed [31:0] op2,
@@ -25,7 +26,7 @@ wire [6:0] opcode = instruction[6:0];
 wire [3:0] funct3 = instruction[14:12];
 wire [6:0] funct7 = instruction[31:25];
 
-always @(*) begin
+always @(posedge clk) begin
     result <= 32'b0;
     jalr <= 32'b0;
     comparison_flag <= 1'b0;
@@ -96,6 +97,10 @@ always @(*) begin
 
         AUIPC_TYPE: begin
             result <= pc + (uop2 << 12);
+        end
+
+        default: begin
+            result <= 32'b0;
         end
     endcase
 end

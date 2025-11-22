@@ -57,7 +57,7 @@ while (True):
         label = "".join([c.decode("iso-8859-1") for c in buffer])[128:-9]
         register_values = []
         for i in range(0, 128, 4):
-            register_values.append(int(parse_number(buffer[i:i + 4])))
+            register_values.append(parse_number(buffer[i:i + 4]))
 
         print(label + parse_number(buffer[-9:-1], "data"))
         if "program counter" not in label:
