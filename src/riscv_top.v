@@ -8,6 +8,7 @@ module riscv_top(
     output                       led0,
     output                       led1,
     output                       led2, 
+    output                       led3,
     output                       ws2812,
 
     output         O_sdram_clk,
@@ -177,10 +178,11 @@ debugger debugger_inst(
     .uart_tx(uart_tx)
 );
 
-reg [2:0] leds_out;
+reg [3:0] leds_out;
 assign led0 = ~leds_out[0];
 assign led1 = ~leds_out[1];
 assign led2 = ~leds_out[2];
+assign led3 = ~leds_out[3];
 
 always @(posedge clk) begin
     if (memory_refresh_counter < 400) begin
@@ -207,13 +209,13 @@ always @(posedge clk) begin
         case (state)
             INIT: begin
                 pc <= 32'b0;
-                leds_out <= 3'd0;
+                leds_out <= 4'd0;
 
                 state <= FETCH;
             end
 
             FETCH: begin
-                leds_out <= 3'd1;
+                leds_out <= 4'd1;
                 read_program <= 1'b1;
 
                 send <= 1'b1;
@@ -224,13 +226,13 @@ always @(posedge clk) begin
             end
 
             EXEC: begin
-                leds_out <= 3'd2;
+                leds_out <= 4'd2;
 
                 state <= WRITE;
             end
 
             WRITE: begin
-                leds_out <= 3'd4;
+                leds_out <= 4'd4;
 
                 send <= 1'b1;
                 label <= "alu result: ";
@@ -264,6 +266,8 @@ always @(posedge clk) begin
             end
 
             MEMORY_OP_WAIT: begin
+                leds_out <= 4'd8;
+                
                 if (~busy) begin
                     state <= FETCH;
                     regwrite_en <= 1'b1;
