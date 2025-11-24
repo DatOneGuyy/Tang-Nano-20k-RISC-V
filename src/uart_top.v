@@ -12,7 +12,7 @@ module uart_test(
 parameter                        LABEL_LENGTH = 32;
 parameter                        DATA_LENGTH = 8;
 parameter                        REGISTER_LENGTH = 128;
-parameter                        CLK_FRE  = 27; //Mhz
+parameter                        CLK_FRE  = 81; //Mhz
 parameter                        UART_FRE = 230400; //hz
 localparam                       IDLE =  0;
 localparam                       SEND_LABEL =  1; //send 

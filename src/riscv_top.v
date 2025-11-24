@@ -1,5 +1,5 @@
 module riscv_top(
-    input                        clk,
+    input                        clkin,
 	input                        uart_rx,
     input                        button0,
     input                        button1,
@@ -23,17 +23,19 @@ module riscv_top(
     inout  [31:0]  IO_sdram_dq
 );
 
-wire memory_clk;
+wire memory_clk, clk;
 Gowin_rPLL rPLL_inst(
-    .clkin(clk),
-    .clkoutp(memory_clk)
+    .clkin(clkin),
+    .clkoutp(memory_clk),
+    .clkout(clk)
 );
 
-localparam INIT = 0;
-localparam FETCH = 1;
-localparam EXEC = 2;
-localparam WRITE = 3;
-localparam MEMORY_OP_WAIT = 4;
+localparam INIT = 0;            //000
+localparam FETCH = 1;           //001
+localparam EXEC = 3;            //011
+localparam WRITE = 7;           //111
+localparam MEMORY_OP_WAIT = 5;  //101
+localparam HALT = 6;            //110
 
 localparam I_TYPE = 7'b0010011;
 localparam I_TYPE_LOAD = 7'b0000011;
@@ -46,7 +48,6 @@ localparam AUIPC_TYPE = 7'b0010111;
 
 reg [2:0] state;
 
-localparam DELAY = 15000000;
 reg [31:0] counter;
 reg [8:0] memory_refresh_counter;
 
@@ -54,7 +55,7 @@ reg read_program;
 reg [31:0] pc;
 wire [31:0] instruction;
 instruction_fetch instruction_fetch_inst(
-    .clk(read_program), 
+    .clk(clk), 
     .pc(pc), 
     .instruction(instruction)
 );
@@ -81,15 +82,17 @@ wire [31:0] read_value2;
 wire [1023:0] full_file;
 reg [31:0] write_value;
 reg regwrite_en;
+reg [4:0] write_dest_latched;
+reg write_en_latched;
 register_file register_file_inst(
     .clk(clk),
     .read1_en(read1_en),
     .read2_en(read2_en),
-    .write1_en(write1_en),
+    .write1_en(write_en_latched),
     .regwrite_en(regwrite_en),
     .read1_dest(read1_dest),
     .read2_dest(read2_dest),
-    .write1_dest(write1_dest),
+    .write1_dest(write_dest_latched),
     .write_value(write_value),
     .read_value1(read_value1),
     .read_value2(read_value2),
@@ -100,6 +103,7 @@ wire [31:0] alu_op1;
 wire [31:0] alu_op2;
 wire [31:0] jump_immediate;
 wire [31:0] memory_write_data;
+wire [7:0] instruction_delay;
 operand_controller operand_controller_inst(
     .register_read1(read_value1),
     .register_read2(read_value2),
@@ -107,7 +111,8 @@ operand_controller operand_controller_inst(
     .alu_op1(alu_op1),
     .alu_op2(alu_op2),
     .jump_immediate(jump_immediate),
-    .memory_write_data(memory_write_data)
+    .memory_write_data(memory_write_data),
+    .delay(instruction_delay)
 );
 
 reg readmem_en;
@@ -145,9 +150,7 @@ sdram sdram_inst(
 wire [31:0] alu_result;
 wire [31:0] jalr_result;
 wire comparison_flag;
-wire alu_clk = clk & (state == EXEC);
 alu alu_inst(
-    .clk(alu_clk),
     .pc(pc),
     .op1(alu_op1),
     .op2(alu_op2),
@@ -178,14 +181,18 @@ debugger debugger_inst(
     .uart_tx(uart_tx)
 );
 
+reg [7:0] instruction_delay_counter;
+
 reg [3:0] leds_out;
 assign led0 = ~leds_out[0];
 assign led1 = ~leds_out[1];
 assign led2 = ~leds_out[2];
 assign led3 = ~leds_out[3];
 
+localparam DELAY = 0;
+
 always @(posedge clk) begin
-    if (memory_refresh_counter < 400) begin
+    if (memory_refresh_counter < 1200) begin
         memory_refresh_counter <= memory_refresh_counter + 9'b1;
         refresh <= 1'b0;
     end 
@@ -200,74 +207,82 @@ always @(posedge clk) begin
     end 
     else begin
         counter <= 1'b0;
-        read_program <= 1'b0;
-        send <= 1'b0;
-        regwrite_en <= 1'b0;
-        readmem_en <= 1'b0;
-        writemem_en <= 1'b0;
 
         case (state)
             INIT: begin
                 pc <= 32'b0;
                 leds_out <= 4'd0;
+                regwrite_en <= 1'b0;
+                send <= 1'b0;
 
                 state <= FETCH;
             end
 
             FETCH: begin
                 leds_out <= 4'd1;
-                read_program <= 1'b1;
-
-                send <= 1'b1;
-                label <= "program counter: ";
-                data <= pc;
+                regwrite_en <= 1'b0;
+                send <= 1'b0;
+                readmem_en <= 1'b0;
+                writemem_en <= 1'b0;
 
                 state <= EXEC;
             end
 
             EXEC: begin
                 leds_out <= 4'd2;
-
+                write_dest_latched <= write1_dest;
+                write_en_latched <= write1_en;
+                regwrite_en <= 1'b0;
                 state <= WRITE;
+
+                if (instruction == 32'b0) begin
+                    label <= "final state: ";
+                    data <= 0;
+                    send <= 1'b1;
+                    state <= HALT;
+                end
+                else begin
+                    send <= 1'b0;
+                end
             end
 
             WRITE: begin
                 leds_out <= 4'd4;
-
-                send <= 1'b1;
-                label <= "alu result: ";
-                data <= alu_result;
-
                 write_value <= alu_result;
+                send <= 1'b0;
 
-                state <= FETCH;
                 if (comparison_flag | jal) begin
                     regwrite_en <= 1'b1;
                     pc <= pc + jump_immediate;
+                    state <= FETCH;
                 end 
                 else if (jalr) begin
                     regwrite_en <= 1'b1;
                     pc <= jalr_result;
+                    state <= FETCH;
                 end 
                 else if (instruction[6:0] == S_TYPE) begin
                     writemem_en <= 1'b1;
+                    regwrite_en <= 1'b0;
 
                     state <= MEMORY_OP_WAIT;
                 end
                 else if (instruction[6:0] == I_TYPE_LOAD) begin
                     readmem_en <= 1'b1;
+                    regwrite_en <= 1'b0;
 
                     state <= MEMORY_OP_WAIT;
                 end
                 else begin
                     regwrite_en <= 1'b1;
                     pc <= pc + 32'd4;
+                    state <= FETCH;
                 end
             end
 
             MEMORY_OP_WAIT: begin
                 leds_out <= 4'd8;
-                
+
                 if (~busy) begin
                     state <= FETCH;
                     regwrite_en <= 1'b1;
@@ -278,6 +293,15 @@ always @(posedge clk) begin
                     data <= memory_read_data;
                     send <= 1'b1;
                 end
+                else begin
+                    regwrite_en <= 1'b0;
+                    send <= 1'b0;
+                end
+            end
+
+            HALT: begin
+                leds_out <= 4'd15;
+                send <= 1'b0;
             end
         endcase
     end

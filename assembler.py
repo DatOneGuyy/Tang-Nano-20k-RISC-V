@@ -210,6 +210,7 @@ for line in read_file:
             write_file.write(binary + "\n")
 
     count += 1
+write_file.write("00000000\n")
 end = time.perf_counter_ns()
 
 print(f"Completed assembly and wrote binary to {destination_file}")

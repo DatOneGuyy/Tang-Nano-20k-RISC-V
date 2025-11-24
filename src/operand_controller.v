@@ -5,9 +5,11 @@ module operand_controller(
     output reg [31:0] alu_op1,
     output reg [31:0] alu_op2,
     output reg [31:0] jump_immediate,
-    output reg [31:0] memory_write_data
+    output reg [31:0] memory_write_data,
+    output reg [7:0] delay
 );
 
+localparam R_TYPE = 7'b0110011;
 localparam I_TYPE = 7'b0010011;
 localparam I_TYPE_LOAD = 7'b0000011;
 localparam S_TYPE = 7'b0100011;
@@ -26,11 +28,21 @@ always @(*) begin
     alu_op2 = register_read2;
     jump_immediate = 32'b0;
     memory_write_data = 32'b0;
+    delay <= 8'b0;
     
     case (opcode)
+        R_TYPE: begin
+            if (~(funct3[0] | funct3[1] | funct3[2])) begin
+                delay <= 8'b1;
+            end
+        end
+
         I_TYPE, I_TYPE_LOAD: begin
             alu_op2[11:0] = instruction[31:20];
             alu_op2[31:12] = (funct3 == 7'h3) ? (20'b0) : ({20{alu_op2[11]}});
+            if (~(funct3[0] | funct3[1] | funct3[2])) begin
+                delay <= 8'b1;
+            end
         end
 
         S_TYPE: begin
@@ -40,10 +52,17 @@ always @(*) begin
                 3'b001: memory_write_data = register_read2[15:0];
                 default: memory_write_data = register_read2;
             endcase
+
+            delay <= 8'b1;
         end
 
-        LUI_TYPE, AUIPC_TYPE: begin
+        LUI_TYPE: begin
             alu_op2[20:0] = {instruction[31:12]};
+        end
+
+        AUIPC_TYPE: begin
+            alu_op2[20:0] = {instruction[31:12]};
+            delay <= 8'b1;
         end
 
         B_TYPE: begin
@@ -53,6 +72,7 @@ always @(*) begin
         J_TYPE, J_TYPE_LINK: begin
             alu_op2[11:0] = instruction[31:20];
             jump_immediate = {{11{instruction[31]}}, instruction[31], instruction[19:12], instruction[20], instruction[30:21], 1'b0};
+            delay <= 8'b1;
         end
     endcase
 end

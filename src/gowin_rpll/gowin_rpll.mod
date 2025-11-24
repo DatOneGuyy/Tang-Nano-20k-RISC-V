@@ -13,9 +13,9 @@
 -file_type vlg
 -dev_type GW2AR-18C
 -dyn_idiv_sel false
--idiv_sel 5
+-idiv_sel 1
 -dyn_fbdiv_sel false
--fbdiv_sel 12
+-fbdiv_sel 3
 -dyn_odiv_sel false
 -odiv_sel 8
 -dyn_da_en false
@@ -27,7 +27,7 @@
 -clkout_bypass false
 -en_clkoutp true
 -clkoutp_bypass false
--psda_sel 8
+-psda_sel 9
 -dutyda_sel 8
 -en_clkoutd false
 -clkoutd_bypass false
