@@ -4,7 +4,7 @@ module instruction_fetch(
     output reg [31:0] instruction
 );
 
-(* ram_style = "block" *)
+(* syn_ramstyle = "block_ram" *)
 reg [31:0] mem [0:16383];
 wire [13:0] addr = pc[15:2];
 
