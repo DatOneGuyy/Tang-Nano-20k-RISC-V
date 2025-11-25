@@ -6,6 +6,8 @@
     <Device name="GW2AR-18C" pn="GW2AR-LV18QN88C8/I7">gw2ar18c-000</Device>
     <FileList>
         <File path="src/alu.v" type="file.verilog" enable="1"/>
+        <File path="src/cla_16bits.v" type="file.verilog" enable="1"/>
+        <File path="src/cla_4bits.v" type="file.verilog" enable="1"/>
         <File path="src/control_unit.v" type="file.verilog" enable="1"/>
         <File path="src/debounce_filter.v" type="file.verilog" enable="1"/>
         <File path="src/debugger.v" type="file.verilog" enable="1"/>

@@ -1,6 +1,6 @@
 // Simple SDRAM controller for Tang 20k
 // nand2mario
-// Modified by Daniel Namkung for 32 bit read/writes
+// Modified by Daniel Namkung for 32 bit read/writes with masking
 // 
 // 2023.7: add buffers to din, dout and addr for ease-of-use.
 // 2023.3: ported to use GW2AR-18's embedded 64Mbit SDRAM.

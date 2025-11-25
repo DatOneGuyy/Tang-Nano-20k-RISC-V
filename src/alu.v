@@ -27,33 +27,26 @@ wire [6:0] funct7 = instruction[31:25];
 
 wire [31:0] upper_imm = {uop2[19:0], 12'b0};
 
-reg lower_carry;
-reg lower_borrow;
-reg [15:0] lower_sum;
-reg [15:0] lower_difference;
-reg [31:0] sum;
-reg [31:0] difference;
+wire [31:0] sum;
+cla_32bits adder(
+    .a(uop1),
+    .b(uop2),
+    .sum(sum)
+);
 
-always @(*) begin
-    {lower_carry, lower_sum} = op1[15:0] + op2[15:0];
-    {lower_borrow, lower_difference} = op1[15:0] - op2[15:0];
+wire [31:0] difference;
+cla_32bits subtractor(
+    .a(~uop1),
+    .b(uop2),
+    .sum(difference)
+);
 
-    sum[31:16] = op1[31:16] + op2[31:16] + lower_carry;
-    sum[15:0] = lower_sum;
-
-    difference[31:16] = op1[31:16] - op2[31:16] - lower_borrow;
-    difference[15:0] = lower_difference;
-end
-
-reg auipc_carry;
-reg [15:0] auipc_lower_sum;
-reg [31:0] auipc_sum;
-
-always @(*) begin
-    {auipc_carry, auipc_lower_sum} = pc[15:0] + upper_imm[15:0];
-    auipc_sum[31:16] = pc[31:16] + upper_imm[31:16] + auipc_carry;
-    auipc_sum[15:0] = auipc_lower_sum;
-end
+wire [31:0] auipc_sum;
+cla_32bits auipc_adder(
+    .a(pc),
+    .b(upper_imm),
+    .sum(auipc_sum)
+);
 
 always @(*) begin
     result = 32'b0;
@@ -63,7 +56,7 @@ always @(*) begin
     case (opcode)
         R_TYPE, I_TYPE: begin
             case (funct3)
-                3'h0: result = (funct7[5] & opcode[5]) ? difference : sum;
+                3'h0: result = (funct7[5] & opcode[5]) ? ~difference : sum;
                 3'h1: result = uop1 << uop2[4:0];
                 3'h2: result = {31'b0, (op1 < op2)};
                 3'h3: result = {31'b0, (uop1 < uop2)};
