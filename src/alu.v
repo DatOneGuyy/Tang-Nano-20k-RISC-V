@@ -57,38 +57,38 @@ cla_16bits pc_adder(
 );
 
 always @(*) begin
-    result <= 32'b0;
-    jalr <= 32'b0;
-    comparison_flag <= 1'b0;
+    result = 32'b0;
+    jalr = 32'b0;
+    comparison_flag = 1'b0;
 
     case (opcode)
         R_TYPE, I_TYPE: begin
             case (funct3)
-                3'h0: result <= (funct7[5] & opcode[5]) ? ~difference : sum;
-                3'h1: result <= uop1 << uop2[4:0];
-                3'h2: result <= {31'b0, (op1 < op2)};
-                3'h3: result <= {31'b0, (uop1 < uop2)};
-                3'h4: result <= uop1 ^ uop2;
-                3'h5: result <= funct7[5] ? (uop1 >>> uop2[4:0]) : (uop1 >> uop2[4:0]);
-                3'h6: result <= uop1 | uop2;
-                3'h7: result <= uop1 & uop2;
-                default: result <= 32'b0;
+                3'h0: result = (funct7[5] & opcode[5]) ? ~difference : sum;
+                3'h1: result = uop1 << uop2[4:0];
+                3'h2: result = {31'b0, (op1 < op2)};
+                3'h3: result = {31'b0, (uop1 < uop2)};
+                3'h4: result = uop1 ^ uop2;
+                3'h5: result = funct7[5] ? (uop1 >>> uop2[4:0]) : (uop1 >> uop2[4:0]);
+                3'h6: result = uop1 | uop2;
+                3'h7: result = uop1 & uop2;
+                default: result = 32'b0;
             endcase
         end
 
-        I_TYPE_LOAD, S_TYPE: result <= sum;
+        I_TYPE_LOAD, S_TYPE: result = sum;
 
-        B_TYPE: comparison_flag <= (funct3[2] ? ((funct3[1]) ? (uop1 < uop2) : (op1 < op2)) : (uop1 == uop2)) ^ funct3[0];
+        B_TYPE: comparison_flag = (funct3[2] ? ((funct3[1]) ? (uop1 < uop2) : (op1 < op2)) : (uop1 == uop2)) ^ funct3[0];
 
         J_TYPE, J_TYPE_LINK: begin
-            result <= {16'b0, pc_sum}; // PC+4
-            jalr <= sum;
+            result = {16'b0, pc_sum}; // PC+4
+            jalr = sum;
         end
 
-        LUI_TYPE: result <= upper_imm;
-        AUIPC_TYPE: result <= auipc_sum;
+        LUI_TYPE: result = upper_imm;
+        AUIPC_TYPE: result = auipc_sum;
         
-        default: result <= 32'b0;
+        default: result = 32'b0;
     endcase
 end
 

@@ -1,26 +1,26 @@
 module riscv_top(
-    input                        clkin,
-	input                        uart_rx,
-    input                        button0,
-    input                        button1,
+    input clkin,
+    input uart_rx,
+    input button0,
+    input button1,
 
-	output                       uart_tx,
-    output                       led0,
-    output                       led1,
-    output                       led2, 
-    output                       led3,
-    output                       ws2812,
+    output uart_tx,
+    output led0,
+    output led1,
+    output led2, 
+    output led3,
+    output ws2812,
 
-    output         O_sdram_clk,
-    output         O_sdram_cke,
-    output         O_sdram_cs_n,
-    output         O_sdram_cas_n,
-    output         O_sdram_ras_n,
-    output         O_sdram_wen_n,
-    output [3:0]   O_sdram_dqm,
-    output [10:0]  O_sdram_addr,
-    output [1:0]   O_sdram_ba,
-    inout  [31:0]  IO_sdram_dq
+    output        O_sdram_clk,
+    output        O_sdram_cke,
+    output        O_sdram_cs_n,
+    output        O_sdram_cas_n,
+    output        O_sdram_ras_n,
+    output        O_sdram_wen_n,
+    output [3:0]  O_sdram_dqm,
+    output [10:0] O_sdram_addr,
+    output [1:0]  O_sdram_ba,
+    inout  [31:0] IO_sdram_dq
 );
 
 wire memory_clk, clk;
@@ -30,12 +30,13 @@ Gowin_rPLL rPLL_inst(
     .clkout(clk)
 );
 
-localparam INIT = 0;            //000
-localparam FETCH = 1;           //001
-localparam EXEC = 3;            //011
-localparam WRITE = 7;           //111
-localparam MEMORY_OP_WAIT = 5;  //101
-localparam HALT = 6;            //110
+// --- STATE MACHINE CONSTANTS ---
+localparam INIT = 0;            // 000
+localparam FETCH = 1;           // 001
+localparam EXEC = 3;            // 011
+localparam WRITE = 7;           // 111
+localparam MEMORY_OP_WAIT = 5;  // 101
+localparam HALT = 6;            // 110
 
 localparam I_TYPE = 7'b0010011;
 localparam I_TYPE_LOAD = 7'b0000011;
@@ -98,7 +99,7 @@ register_file register_file_inst(
     .read_value2(read_value2),
     .full_file(full_file)
 );
- 
+    
 wire [31:0] alu_op1;
 wire [31:0] alu_op2;
 wire [31:0] jump_immediate;
@@ -121,6 +122,7 @@ reg refresh;
 wire [31:0] memory_read_data;
 wire data_ready;
 wire busy;
+reg [2:0] mem_access_type;
 sdram sdram_inst(
     .SDRAM_DQ(IO_sdram_dq),
     .SDRAM_A(O_sdram_addr),
@@ -139,7 +141,7 @@ sdram sdram_inst(
     .rd(readmem_en),
     .wr(writemem_en),
     .refresh(refresh),
-    .access_type(instruction[14:12]),
+    .access_type(mem_access_type),
     .addr(alu_result[22:0]),
     .din(read_value2),
     .dout32(memory_read_data),
@@ -189,8 +191,6 @@ assign led1 = ~leds_out[1];
 assign led2 = ~leds_out[2];
 assign led3 = ~leds_out[3];
 
-localparam DELAY = 0;
-
 always @(posedge clk) begin
     if (memory_refresh_counter < 1200) begin
         memory_refresh_counter <= memory_refresh_counter + 9'b1;
@@ -201,110 +201,122 @@ always @(posedge clk) begin
         refresh <= 1'b1;
     end
 
-    if (counter < DELAY) begin
-        counter <= counter + 1'b1;
-        send <= 1'b0;
-    end 
-    else begin
-        counter <= 1'b0;
+    case (state)
+        INIT: begin
+            pc <= 32'b0;
+            leds_out <= 4'd0;
+            regwrite_en <= 1'b0;
+            send <= 1'b0;
+            readmem_en <= 1'b0;
+            writemem_en <= 1'b0;
 
-        case (state)
-            INIT: begin
-                pc <= 32'b0;
-                leds_out <= 4'd0;
-                regwrite_en <= 1'b0;
+            state <= FETCH;
+        end
+
+        FETCH: begin
+            leds_out <= 4'd1;
+            regwrite_en <= 1'b0;
+            send <= 1'b0;
+            readmem_en <= 1'b0;
+            writemem_en <= 1'b0;
+
+            state <= EXEC;
+        end
+
+        EXEC: begin
+            leds_out <= 4'd2;
+            write_dest_latched <= write1_dest;
+            write_en_latched <= write1_en;
+            regwrite_en <= 1'b0;
+            
+            state <= WRITE;
+
+            if (instruction == 32'b0) begin
+                label <= "final state: ";
+                data <= 0;
+                send <= 1'b1;
+                state <= HALT;
+            end
+            else begin
                 send <= 1'b0;
+            end
+        end
 
+        WRITE: begin
+            leds_out <= 4'd4;
+            write_value <= alu_result;
+            mem_access_type <= instruction[14:12];
+            send <= 1'b0;
+
+            if (comparison_flag | jal) begin
+                regwrite_en <= 1'b1;
+                pc <= pc + jump_immediate;
                 state <= FETCH;
-            end
-
-            FETCH: begin
-                leds_out <= 4'd1;
-                regwrite_en <= 1'b0;
-                send <= 1'b0;
-                readmem_en <= 1'b0;
-                writemem_en <= 1'b0;
-
-                state <= EXEC;
-            end
-
-            EXEC: begin
-                leds_out <= 4'd2;
-                write_dest_latched <= write1_dest;
-                write_en_latched <= write1_en;
-                regwrite_en <= 1'b0;
-                state <= WRITE;
-
-                if (instruction == 32'b0) begin
-                    label <= "final state: ";
-                    data <= 0;
-                    send <= 1'b1;
-                    state <= HALT;
-                end
-                else begin
-                    send <= 1'b0;
-                end
-            end
-
-            WRITE: begin
-                leds_out <= 4'd4;
-                write_value <= alu_result;
-                send <= 1'b0;
-
-                if (comparison_flag | jal) begin
-                    regwrite_en <= 1'b1;
-                    pc <= pc + jump_immediate;
-                    state <= FETCH;
-                end 
-                else if (jalr) begin
-                    regwrite_en <= 1'b1;
-                    pc <= jalr_result;
-                    state <= FETCH;
-                end 
-                else if (instruction[6:0] == S_TYPE) begin
+            end 
+            else if (jalr) begin
+                regwrite_en <= 1'b1;
+                pc <= jalr_result;
+                state <= FETCH;
+            end 
+            else if (instruction[6:0] == S_TYPE) begin
+                if (~refresh && ~busy) begin
                     writemem_en <= 1'b1;
                     regwrite_en <= 1'b0;
-
                     state <= MEMORY_OP_WAIT;
                 end
-                else if (instruction[6:0] == I_TYPE_LOAD) begin
+            end
+            else if (instruction[6:0] == I_TYPE_LOAD) begin
+                if (~refresh && ~busy) begin
                     readmem_en <= 1'b1;
                     regwrite_en <= 1'b0;
-
                     state <= MEMORY_OP_WAIT;
                 end
-                else begin
-                    regwrite_en <= 1'b1;
-                    pc <= pc + 32'd4;
+            end
+            else begin
+                regwrite_en <= 1'b1;
+                pc <= pc + 32'd4;
+                state <= FETCH;
+            end
+        end
+
+        MEMORY_OP_WAIT: begin
+            leds_out <= 4'd8;
+            send <= 1'b0;
+
+            if (readmem_en) begin
+                if (data_ready) begin
                     state <= FETCH;
+                    regwrite_en <= 1'b1;
+
+                    if (mem_access_type == 3'd2) begin
+                        write_value <= memory_read_data;
+                    end
+                    else if (mem_access_type == 3'd1) begin
+                        write_value <= 32'hFFFF & (memory_read_data >> {alu_result[1:0], 3'b0});
+                    end
+                    else begin  
+                        write_value <= 32'hFF & (memory_read_data >> {alu_result[1:0], 3'b0});
+                    end
+
+                    pc <= pc + 32'd4;
                 end
             end
-
-            MEMORY_OP_WAIT: begin
-                leds_out <= 4'd8;
-
+            else if (writemem_en) begin
                 if (~busy) begin
                     state <= FETCH;
-                    regwrite_en <= 1'b1;
-                    write_value <= memory_read_data;
                     pc <= pc + 32'd4;
-
-                    label <= "memory op completed: ";
-                    data <= memory_read_data;
-                    send <= 1'b1;
-                end
-                else begin
-                    regwrite_en <= 1'b0;
-                    send <= 1'b0;
                 end
             end
-
-            HALT: begin
-                leds_out <= 4'd15;
-                send <= 1'b0;
+            else begin
+                state <= FETCH;
             end
-        endcase
-    end
+        end
+
+        HALT: begin
+            leds_out <= 4'd15;
+            send <= 1'b0;
+        end
+    endcase
 end
 
 GSR gsr_inst (

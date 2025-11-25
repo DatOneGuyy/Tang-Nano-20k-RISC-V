@@ -29,7 +29,7 @@
 module sdram
 #(
     // Clock frequency, max 66.7Mhz with current set of T_xx/CAS parameters.
-    parameter         FREQ = 81_000_000,  
+    parameter         FREQ = 60_000_000,  
     parameter         DATA_WIDTH = 32,
     parameter         ROW_WIDTH = 11,  // 2K rows
     parameter         COL_WIDTH = 8,   // 256 words per row (1Kbytes)
@@ -202,16 +202,8 @@ always @(posedge clk) begin
             dout_buf <= next_dout;
             busy <= 0;
             state <= IDLE;
-            
-            if (access_type == 3'd2) begin
-                dout32_buf <= dq_in;
-            end
-            else if (access_type == 3'd1) begin
-                dout32_buf <= 32'hFFFF & (dq_in >> {addr_buf[1:0], 3'b0});
-            end
-            else begin  
-                dout32_buf <= 32'hFF & (dq_in >> {addr_buf[1:0], 3'b0});
-            end
+
+            dout32_buf <= dq_in;
         end
 
         // write sequence
