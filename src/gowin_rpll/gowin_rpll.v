@@ -5,7 +5,7 @@
 //Part Number: GW2AR-LV18QN88C8/I7
 //Device: GW2AR-18
 //Device Version: C
-//Created Time: Fri Nov 21 19:14:53 2025
+//Created Time: Mon Nov 24 22:50:36 2025
 
 module Gowin_rPLL (clkout, clkoutp, clkin);
 
@@ -47,7 +47,7 @@ defparam rpll_inst.DYN_FBDIV_SEL = "false";
 defparam rpll_inst.FBDIV_SEL = 2;
 defparam rpll_inst.DYN_ODIV_SEL = "false";
 defparam rpll_inst.ODIV_SEL = 8;
-defparam rpll_inst.PSDA_SEL = "1001";
+defparam rpll_inst.PSDA_SEL = "1000";
 defparam rpll_inst.DYN_DA_EN = "false";
 defparam rpll_inst.DUTYDA_SEL = "1000";
 defparam rpll_inst.CLKOUT_FT_DIR = 1'b1;

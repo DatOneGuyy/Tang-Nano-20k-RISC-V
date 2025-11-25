@@ -288,10 +288,9 @@ always @(posedge clk) begin
                     regwrite_en <= 1'b1;
                     write_value <= memory_read_data;
                     pc <= pc + 32'd4;
-
-                    label <= "memory op completed: ";
+                    send <= 1'b0;
+                    label <= "read: ";
                     data <= memory_read_data;
-                    send <= 1'b1;
                 end
                 else begin
                     regwrite_en <= 1'b0;

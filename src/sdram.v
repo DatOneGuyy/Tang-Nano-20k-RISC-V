@@ -37,7 +37,7 @@ module sdram
 
     // Time delays for 66.7Mhz max clock (min clock cycle 15ns)
     // The SDRAM supports max 166.7Mhz (RP/RCD/RC need changes)
-    parameter [4:0]   CAS  = 5'd2,     // 2/3 cycles, set in mode register
+    parameter [4:0]   CAS  = 5'd3,     // 2/3 cycles, set in mode register
     parameter [4:0]   T_WR = 5'd2,     // 2 cycles, write recovery
     parameter [4:0]   T_MRD= 5'd2,     // 2 cycles, mode register set
     parameter [4:0]   T_RP = 5'd2,     // 15ns, precharge to active
