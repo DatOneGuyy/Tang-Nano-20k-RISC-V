@@ -29,7 +29,7 @@
 module sdram
 #(
     // Clock frequency, max 66.7Mhz with current set of T_xx/CAS parameters.
-    parameter         FREQ = 60_000_000,  
+    parameter         FREQ = 81_000_000,  
     parameter         DATA_WIDTH = 32,
     parameter         ROW_WIDTH = 11,  // 2K rows
     parameter         COL_WIDTH = 8,   // 256 words per row (1Kbytes)

@@ -1,4 +1,6 @@
 module operand_controller(
+    input clk,
+    input en,
     input [31:0] register_read1,
     input [31:0] register_read2,
     input [31:0] instruction,
@@ -6,7 +8,10 @@ module operand_controller(
     output reg [31:0] alu_op2,
     output reg [31:0] jump_immediate,
     output reg [31:0] memory_write_data,
-    output reg [7:0] delay
+    output reg [7:0] delay,
+    output reg write1_en,
+    output reg jal,
+    output reg jalr
 );
 
 localparam R_TYPE = 7'b0110011;
@@ -23,54 +28,62 @@ wire [6:0] opcode = instruction[6:0];
 wire [3:0] funct3 = instruction[14:12];
 wire [6:0] funct7 = instruction[31:25];
 
-always @(*) begin
-    alu_op1 = register_read1;
-    alu_op2 = register_read2;
-    jump_immediate = 32'b0;
-    memory_write_data = 32'b0;
-    delay = 8'b0;
+always @(posedge clk) begin
+    if (en) begin
+    jalr <= opcode == J_TYPE_LINK;
+    jal <= opcode == J_TYPE;
+
+    alu_op1 <= register_read1;
+    alu_op2 <= register_read2;
+    jump_immediate <= 32'b0;
+    memory_write_data <= 32'b0;
+    delay <= 8'b0;
+    write1_en <= 1'b1;
     
     case (opcode)
         R_TYPE: begin
-            delay = {7'b0, ~(funct3[0] | funct3[1] | funct3[2])};
+            delay <= {7'b0, ~(funct3[0] | funct3[1] | funct3[2])};
         end
 
         I_TYPE, I_TYPE_LOAD: begin
-            alu_op2[11:0] = instruction[31:20];
-            alu_op2[31:12] = (funct3 == 7'h3) ? ({20{alu_op2[11]}}) : (20'b0);
-            delay = {7'b0, ~(funct3[0] | funct3[1] | funct3[2])};
+            alu_op2[11:0] <= instruction[31:20];
+            alu_op2[31:12] <= (funct3 == 7'h3) ? ({20{alu_op2[11]}}) : (20'b0);
+            delay <= {7'b0, ~(funct3[0] | funct3[1] | funct3[2])};
         end
 
         S_TYPE: begin
-            alu_op2 = {instruction[31:25], instruction[11:7]};
+            alu_op2 <= {instruction[31:25], instruction[11:7]};
             case (funct3)
-                3'b000: memory_write_data = register_read2[7:0];
-                3'b001: memory_write_data = register_read2[15:0];
-                default: memory_write_data = register_read2;
+                3'b000: memory_write_data <= register_read2[7:0];
+                3'b001: memory_write_data <= register_read2[15:0];
+                default: memory_write_data <= register_read2;
             endcase
 
-            delay = 8'b1;
+            write1_en <= 1'b0;
+            delay <= 8'b1;
         end
 
         LUI_TYPE: begin
-            alu_op2[20:0] = {instruction[31:12]};
+            alu_op2[20:0] <= {instruction[31:12]};
         end
 
         AUIPC_TYPE: begin
-            alu_op2[20:0] = {instruction[31:12]};
-            delay = 8'b1;
+            alu_op2[20:0] <= {instruction[31:12]};
+            delay <= 8'b1;
         end
 
         B_TYPE: begin
-            jump_immediate = {{19{instruction[31]}}, instruction[31], instruction[7], instruction[30:25], instruction[11:8], 1'b0};
+            jump_immediate <= {{19{instruction[31]}}, instruction[31], instruction[7], instruction[30:25], instruction[11:8], 1'b0};
+            write1_en <= 1'b0;
         end
 
         J_TYPE, J_TYPE_LINK: begin
-            alu_op2[11:0] = instruction[31:20];
-            jump_immediate = {{11{instruction[31]}}, instruction[31], instruction[19:12], instruction[20], instruction[30:21], 1'b0};
-            delay = 8'b1;
+            alu_op2[11:0] <= instruction[31:20];
+            jump_immediate <= {{11{instruction[31]}}, instruction[31], instruction[19:12], instruction[20], instruction[30:21], 1'b0};
+            delay <= 8'b1;
         end
     endcase
+    end
 end
 
 endmodule

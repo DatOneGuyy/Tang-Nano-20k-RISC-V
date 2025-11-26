@@ -30,9 +30,10 @@ Gowin_rPLL rPLL_inst(
     .clkout(clk)
 );
 
-// --- STATE MACHINE CONSTANTS ---
 localparam INIT = 0;            // 000
 localparam FETCH = 1;           // 001
+localparam REG_FETCH = 4;       // 100
+localparam DECODE = 2;          // 010
 localparam EXEC = 3;            // 011
 localparam WRITE = 7;           // 111
 localparam MEMORY_OP_WAIT = 5;  // 101
@@ -61,23 +62,7 @@ instruction_fetch instruction_fetch_inst(
     .instruction(instruction)
 );
 
-wire read1_en, read2_en, write1_en;
-wire [4:0] read1_dest;
-wire [4:0] read2_dest;
-wire [4:0] write1_dest;
 wire jal, jalr;
-control_unit control_unit_inst(
-    .instruction(instruction),
-    .read1_en(read1_en),
-    .read2_en(read2_en),
-    .write1_en(write1_en),
-    .read1_dest(read1_dest),
-    .read2_dest(read2_dest),
-    .write1_dest(write1_dest),
-    .jal(jal),
-    .jalr(jalr)
-);
-
 wire [31:0] read_value1;
 wire [31:0] read_value2;
 wire [1023:0] full_file;
@@ -87,13 +72,12 @@ reg [4:0] write_dest_latched;
 reg write_en_latched;
 register_file register_file_inst(
     .clk(clk),
-    .read1_en(read1_en),
-    .read2_en(read2_en),
+    .read_en(state == REG_FETCH),
     .write1_en(write_en_latched),
     .regwrite_en(regwrite_en),
-    .read1_dest(read1_dest),
-    .read2_dest(read2_dest),
-    .write1_dest(write_dest_latched),
+    .read1_dest(instruction[19:15]),
+    .read2_dest(instruction[24:20]),
+    .write1_dest(instruction[11:7]),
     .write_value(write_value),
     .read_value1(read_value1),
     .read_value2(read_value2),
@@ -105,7 +89,10 @@ wire [31:0] alu_op2;
 wire [31:0] jump_immediate;
 wire [31:0] memory_write_data;
 wire [7:0] instruction_delay;
+wire write1_en;
 operand_controller operand_controller_inst(
+    .clk(clk),
+    .en(state == DECODE),
     .register_read1(read_value1),
     .register_read2(read_value2),
     .instruction(instruction),
@@ -113,7 +100,10 @@ operand_controller operand_controller_inst(
     .alu_op2(alu_op2),
     .jump_immediate(jump_immediate),
     .memory_write_data(memory_write_data),
-    .delay(instruction_delay)
+    .delay(instruction_delay),
+    .write1_en(write1_en),
+    .jal(jal),
+    .jalr(jalr)
 );
 
 reg readmem_en;
@@ -153,6 +143,8 @@ wire [31:0] alu_result;
 wire [31:0] jalr_result;
 wire comparison_flag;
 alu alu_inst(
+    .clk(clk),
+    .en(state == EXEC),
     .pc(pc),
     .op1(alu_op1),
     .op2(alu_op2),
@@ -220,16 +212,37 @@ always @(posedge clk) begin
             readmem_en <= 1'b0;
             writemem_en <= 1'b0;
 
+            state <= REG_FETCH;
+        end
+
+        REG_FETCH: begin
+            leds_out <= 4'd1;
+            regwrite_en <= 1'b0;
+            send <= 1'b0;
+            readmem_en <= 1'b0;
+            writemem_en <= 1'b0;
+
+            state <= DECODE;
+        end
+
+        DECODE: begin
+            leds_out <= 4'd1;
+            regwrite_en <= 1'b0;
+            send <= 1'b0;
+            readmem_en <= 1'b0;
+            writemem_en <= 1'b0;
+
             state <= EXEC;
         end
 
         EXEC: begin
             leds_out <= 4'd2;
-            write_dest_latched <= write1_dest;
-            write_en_latched <= write1_en;
             regwrite_en <= 1'b0;
             
             state <= WRITE;
+
+            write_dest_latched <= instruction[11:7];
+            write_en_latched <= write1_en;
 
             if (instruction == 32'b0) begin
                 label <= "final state: ";

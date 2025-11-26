@@ -1,8 +1,7 @@
 module register_file(
     input clk,
 
-    input read1_en,
-    input read2_en,
+    input read_en,
     input write1_en,
     input regwrite_en,
 
@@ -21,14 +20,8 @@ module register_file(
 reg [31:0] combined [0:31];
 
 always @(posedge clk) begin
-    read_value1 <= 32'b0;
-    read_value2 <= 32'b0;
-
-    if (read1_en) begin
+    if (read_en) begin
         read_value1 <= combined[read1_dest];
-    end
-
-    if (read2_en) begin
         read_value2 <= combined[read2_dest];
     end
 
